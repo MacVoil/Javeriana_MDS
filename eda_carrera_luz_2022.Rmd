@@ -3,9 +3,9 @@ title: "Themed dashboard"
 output: 
   flexdashboard::flex_dashboard:
     theme:
-      bg: "#101010"
-      fg: "#FDF7F7" 
-      primary: "#ED79F9"
+      bg: "#F7F9FC"
+      fg: "#212529" 
+      primary: "#212529"
       base_font:
         google: Prompt
       code_font:
@@ -16,9 +16,27 @@ output:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
-# Install thematic and un-comment for themed static plots (i.e., ggplot2)
-# thematic::thematic_rmd()
+library(paqueteMET)
+library(tidyverse)
+library(plotly)
+library(correlationfunnel)
+library(ggdist)
+library(tidyquant)
 ```
+
+```{r}
+carrera_ext <- CarreraLuz22 %>% 
+  mutate(median_t = median(timerun),
+         over_median = if_else(timerun>median_t, "yes", "no")) %>% 
+  select(-id, -median_t,-timerun)
+
+bin_car <- carrera_ext %>% 
+  binarize(n_bins = 5)
+
+correlated_carrera <- bin_car %>%
+  correlate(target = over_median__yes)
+```
+
 
 Column {data-width=650 .tabset}
 -----------------------------------------------------------------------
@@ -26,13 +44,23 @@ Column {data-width=650 .tabset}
 ### Chart A
 
 ```{r}
+g <- correlated_carrera %>%
+    filter(!(feature %in% c("over_median"))) %>%
+    plot_correlation_funnel(interactive = FALSE, limits = c(-0.5, 0.5))
 
+g2 <- g + ggtitle("Funnel de correlación, Tiempo Bajo la Mediana / Tiempo Sobre la Mediana")
+
+ggplotly(g2)
+  
 ```
 
 ### Chart B
 
 ```{r}
+g <- ggplot(CarreraLuz22, aes(edad, timerun, color = sex)) +
+  geom_point(alpha = 0.5)
 
+ggplotly(g)
 ```
 
 Column {data-width=350}
@@ -42,11 +70,57 @@ Column {data-width=350}
 
 ```{r}
 
+ggplot(CarreraLuz22 %>%
+         filter(timerun != max(timerun)), aes(x = sex, y = timerun, fill = sex)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA) +
+  geom_boxplot(
+    width = 0.12,
+    outlier.color = NA,
+    alpha = 0.5
+  ) +
+  stat_dots(
+    side = "left",
+    justification = 1.1
+  ) +
+  coord_flip() +
+  theme_tq() +
+  scale_fill_tq(theme = "light")
+
+
+
+
 ```
 
 ### Chart D
 
 ```{r}
-
+ggplot(CarreraLuz22 %>%
+         mutate(
+           rango_edad = cut_number(edad, 5)) %>% 
+         filter(timerun != max(timerun)#,
+                #sex == "Mujer"
+                ) %>% 
+         mutate(
+           rango_edad = fct_reorder(rango_edad, timerun, median)), 
+       aes(x = rango_edad, y = timerun, fill = rango_edad)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA) +
+  geom_boxplot(
+    width = 0.12,
+    outlier.color = NA,
+    alpha = 0.5
+  ) +
+  stat_dots(
+    side = "left",
+    justification = 1.1
+  ) +
+  coord_flip() +
+  theme_tq() +
+  scale_fill_tq(theme = "light")
 ```
 
