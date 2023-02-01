@@ -1,15 +1,7 @@
 ---
-title: "Themed dashboard"
+title: "EDA Carrera Luz"
 output: 
   flexdashboard::flex_dashboard:
-    theme:
-      bg: "#F7F9FC"
-      fg: "#212529" 
-      primary: "#212529"
-      base_font:
-        google: Prompt
-      code_font:
-        google: JetBrains Mono
     orientation: columns
     vertical_layout: fill
 ---
@@ -38,7 +30,153 @@ correlated_carrera <- bin_car %>%
 ```
 
 
-Column {data-width=650 .tabset}
+Exploración Inicial {data-navmenu="Menu"}
+==================================
+
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+### Time Run
+
+```{r}
+ggplot(CarreraLuz22 , aes( y = timerun)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA,
+               fill = "#1F78B4") +
+  geom_boxplot(
+    width = 0.12,
+    outlier.color = NA,
+    alpha = 0.5,
+    fill = "#1F78B4"
+  ) +
+  stat_dots(
+    side = "left",
+    justification = 1.1,
+    fill = "#1F78B4"
+  ) +
+  coord_flip() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(axis.text.y=element_blank()
+        ) +
+  xlab("")
+```
+
+
+
+### Sex
+```{r}
+g <- ggplot(CarreraLuz22 , aes(x = sex, fill = sex)) +
+  geom_bar() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none") +
+  coord_flip() +
+  xlab("") 
+  
+
+ggplotly(g)
+```
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+### Edad
+```{r}
+ggplot(CarreraLuz22 , aes( y = edad)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA,
+               fill = "#2C3E50") +
+  geom_boxplot(
+    width = 0.12,
+    outlier.color = NA,
+    alpha = 0.5,
+    fill = "#2C3E50"
+  ) +
+  stat_dots(
+    side = "left",
+    justification = 1.1,
+    fill = "#2C3E50"
+  ) +
+  coord_flip() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(axis.text.y=element_blank()) +
+  xlab("") 
+
+```
+
+### Categoria
+
+```{r}
+g <- ggplot(CarreraLuz22 %>% 
+              mutate(
+           categoria = fct_infreq(categoria)), 
+            aes(x = categoria, fill = categoria)) +
+  geom_bar() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none") +
+  coord_flip() +
+  xlab("") 
+
+ggplotly(g)
+```
+
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+### Origen
+
+```{r}
+g <- ggplot(CarreraLuz22 %>% 
+              mutate(
+           origen = fct_infreq(origen),
+           origen = fct_lump_lowfreq(origen, other_level = "Otros 48 Origenes")), 
+            aes(x = origen, fill = origen)) +
+  geom_bar() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none") +
+  coord_flip() +
+  xlab("") 
+
+ggplotly(g)
+```
+
+### Nacionalidad
+
+```{r}
+g <- ggplot(CarreraLuz22 %>% 
+              mutate(
+           nacionalidad = fct_infreq(nacionalidad),
+           nacionalidad = fct_lump_lowfreq(nacionalidad, other_level = "Otras 5 Nacionalidades")
+           ), 
+            aes(x = nacionalidad, fill = nacionalidad)) +
+  geom_bar() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none") +
+  coord_flip() +
+  xlab("") 
+
+ggplotly(g)
+```
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+### Discusión
+
+
+
+
+
+Ingeniería de características {data-navmenu="Menu"}
+==================================
+Column {data-width=650}
 -----------------------------------------------------------------------
 
 ### Chart A
@@ -53,6 +191,9 @@ g2 <- g + ggtitle("Funnel de correlación, Tiempo Bajo la Mediana / Tiempo Sobre
 ggplotly(g2)
   
 ```
+
+Exploración Inicial {data-navmenu="Menu"}
+==================================
 
 ### Chart B
 
