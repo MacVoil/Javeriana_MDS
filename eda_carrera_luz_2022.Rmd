@@ -16,27 +16,20 @@ library(ggdist)
 library(tidyquant)
 ```
 
-```{r}
-carrera_ext <- CarreraLuz22 %>% 
-  mutate(median_t = median(timerun),
-         over_median = if_else(timerun>median_t, "yes", "no")) %>% 
-  select(-id, -median_t,-timerun)
-
-bin_car <- carrera_ext %>% 
-  binarize(n_bins = 5)
-
-correlated_carrera <- bin_car %>%
-  correlate(target = over_median__yes)
-```
+<style>
+body {
+text-align: justify;
+}
+</style>
 
 
-Exploración Inicial {data-navmenu="Menu"}
+**Exploración Inicial** {data-navmenu="Menu"}
 ==================================
 
 
 Column {data-width=250}
 -----------------------------------------------------------------------
-### Time Run
+### **Time Run**
 
 ```{r}
 ggplot(CarreraLuz22 , aes( y = timerun)) +
@@ -66,7 +59,7 @@ ggplot(CarreraLuz22 , aes( y = timerun)) +
 
 
 
-### Sex
+### **Sex**
 ```{r}
 g <- ggplot(CarreraLuz22 , aes(x = sex, fill = sex)) +
   geom_bar() +
@@ -82,7 +75,7 @@ ggplotly(g)
 
 Column {data-width=250}
 -----------------------------------------------------------------------
-### Edad
+### **Edad**
 ```{r}
 ggplot(CarreraLuz22 , aes( y = edad)) +
   stat_halfeye(adjust = 0.5,
@@ -109,7 +102,7 @@ ggplot(CarreraLuz22 , aes( y = edad)) +
 
 ```
 
-### Categoria
+### **Categoria**
 
 ```{r}
 g <- ggplot(CarreraLuz22 %>% 
@@ -129,7 +122,7 @@ ggplotly(g)
 
 Column {data-width=250}
 -----------------------------------------------------------------------
-### Origen
+### **Origen**
 
 ```{r}
 g <- ggplot(CarreraLuz22 %>% 
@@ -147,7 +140,7 @@ g <- ggplot(CarreraLuz22 %>%
 ggplotly(g)
 ```
 
-### Nacionalidad
+### **Nacionalidad**
 
 ```{r}
 g <- ggplot(CarreraLuz22 %>% 
@@ -168,20 +161,135 @@ ggplotly(g)
 
 Column {data-width=250}
 -----------------------------------------------------------------------
-### Discusión
+### **Discusión**
 
-
-
-
-
-Ingeniería de características {data-navmenu="Menu"}
+**Ingeniería de características y limpieza** {data-navmenu="Menu"}
 ==================================
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### **Time Run en minutos sin valor más alto**
+
+```{r fig.width = 12}
+carrera_clean <- CarreraLuz22 %>% 
+  filter(timerun != max(timerun)) %>% 
+  mutate(timerum_minutes = timerun/60, 
+         time_over_mean = timerum_minutes > median(timerum_minutes),
+         rango_edad = cut_number(edad, 5),
+         origen_refact = fct_lump_lowfreq(origen),
+         nacionalidad_refact = fct_lump_lowfreq(nacionalidad))
+
+ggplot(carrera_clean , aes( y = timerum_minutes)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA,
+               fill = "#1F78B4") +
+  geom_boxplot(
+    width = 0.12,
+    outlier.color = NA,
+    alpha = 0.5,
+    fill = "#1F78B4"
+  ) +
+  stat_dots(
+    side = "left",
+    justification = 1.1,
+    fill = "#1F78B4"
+  ) +
+  coord_flip() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(axis.text.y=element_blank()
+        ) +
+  xlab("")
+```
+
+
+### **Edades por rangos con obervaciones similares**
+
+```{r}
+g <- ggplot(carrera_clean , 
+            aes(x = rango_edad, fill = rango_edad)) +
+  geom_bar() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none") +
+  coord_flip() +
+  xlab("") 
+
+ggplotly(g)
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### **Tiempos por arriba (TRUE) y por bajo (FALSE) de la mediana**
+
+```{r}
+g <- ggplot(carrera_clean , 
+            aes(x = time_over_mean, fill = time_over_mean)) +
+  geom_bar() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none") +
+  coord_flip() +
+  xlab("") 
+
+ggplotly(g)
+```
+
+### **Discusión**
+
+**Embudo de Correlación** {data-navmenu="Menu"}
+==================================
+
+Column {data-width=750}
+-----------------------------------------------------------------------
+
+### **Embudo de Correlación**
+
+```{r}
+
+carrera_ext <- carrera_clean %>% 
+  select(sex,
+         time_over_mean,
+         rango_edad,
+         origen_refact,
+         nacionalidad_refact)
+
+bin_car <- carrera_ext %>% 
+  binarize(n_bins = 5)
+
+correlated_carrera <- bin_car %>%
+  correlate(target = time_over_mean__0)
+
+
+g <- correlated_carrera %>%
+    filter(!(feature %in% c("time_over_mean"))) %>%
+    plot_correlation_funnel(interactive = FALSE, limits = c(-0.5, 0.5))
+
+g2 <- g + ggtitle("Funnel de correlación, Tiempo Bajo la Mediana / Tiempo Sobre la Mediana")
+
+ggplotly(g2)
+  
+```
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+
+### **Discusión**
+
+Borradores {data-navmenu="Menu"}
+==================================
+
 Column {data-width=650}
 -----------------------------------------------------------------------
 
 ### Chart A
 
 ```{r}
+
 g <- correlated_carrera %>%
     filter(!(feature %in% c("over_median"))) %>%
     plot_correlation_funnel(interactive = FALSE, limits = c(-0.5, 0.5))
@@ -191,9 +299,6 @@ g2 <- g + ggtitle("Funnel de correlación, Tiempo Bajo la Mediana / Tiempo Sobre
 ggplotly(g2)
   
 ```
-
-Exploración Inicial {data-navmenu="Menu"}
-==================================
 
 ### Chart B
 
