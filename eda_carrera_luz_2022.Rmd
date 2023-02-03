@@ -22,6 +22,9 @@ text-align: justify;
 }
 </style>
 
+**Introducción** {data-navmenu="Menu"}
+==================================
+
 
 **Exploración Inicial** {data-navmenu="Menu"}
 ==================================
@@ -174,13 +177,13 @@ Column {data-width=500}
 ```{r fig.width = 12}
 carrera_clean <- CarreraLuz22 %>% 
   filter(timerun != max(timerun)) %>% 
-  mutate(timerum_minutes = timerun/60, 
-         time_over_mean = timerum_minutes > median(timerum_minutes),
+  mutate(timerun_minutes = timerun/60, 
+         time_under_mean = timerun_minutes <= median(timerun_minutes),
          rango_edad = cut_number(edad, 5),
          origen_refact = fct_lump_lowfreq(origen),
          nacionalidad_refact = fct_lump_lowfreq(nacionalidad))
 
-ggplot(carrera_clean , aes( y = timerum_minutes)) +
+ggplot(carrera_clean , aes( y = timerun_minutes)) +
   stat_halfeye(adjust = 0.5,
                justification = -0.2,
                .width = 0,
@@ -200,8 +203,7 @@ ggplot(carrera_clean , aes( y = timerum_minutes)) +
   coord_flip() +
   theme_tq() +
   scale_fill_tq(theme = "light") +
-  theme(axis.text.y=element_blank()
-        ) +
+  theme(axis.text.y=element_blank()) +
   xlab("")
 ```
 
@@ -221,14 +223,14 @@ g <- ggplot(carrera_clean ,
 ggplotly(g)
 ```
 
-Column {data-width=500}
+Column {data-width=667}
 -----------------------------------------------------------------------
 
-### **Tiempos por arriba (TRUE) y por bajo (FALSE) de la mediana**
+### **Tiempos por arriba (FALSE) y por bajo (TRUE) de la mediana**
 
 ```{r}
 g <- ggplot(carrera_clean , 
-            aes(x = time_over_mean, fill = time_over_mean)) +
+            aes(x = time_under_mean, fill = time_under_mean)) +
   geom_bar() +
   theme_tq() +
   scale_fill_tq(theme = "light") +
@@ -244,7 +246,7 @@ ggplotly(g)
 **Embudo de Correlación** {data-navmenu="Menu"}
 ==================================
 
-Column {data-width=750}
+Column {data-width=333}
 -----------------------------------------------------------------------
 
 ### **Embudo de Correlación**
@@ -253,7 +255,7 @@ Column {data-width=750}
 
 carrera_ext <- carrera_clean %>% 
   select(sex,
-         time_over_mean,
+         time_under_mean,
          rango_edad,
          origen_refact,
          nacionalidad_refact)
@@ -262,11 +264,11 @@ bin_car <- carrera_ext %>%
   binarize(n_bins = 5)
 
 correlated_carrera <- bin_car %>%
-  correlate(target = time_over_mean__0)
+  correlate(target = time_under_mean__0)
 
 
 g <- correlated_carrera %>%
-    filter(!(feature %in% c("time_over_mean"))) %>%
+    filter((feature %in% c("sex", "rango_edad"))) %>%
     plot_correlation_funnel(interactive = FALSE, limits = c(-0.5, 0.5))
 
 g2 <- g + ggtitle("Funnel de correlación, Tiempo Bajo la Mediana / Tiempo Sobre la Mediana")
@@ -280,44 +282,69 @@ Column {data-width=250}
 
 ### **Discusión**
 
-Borradores {data-navmenu="Menu"}
+**Analisis Univariado** {data-navmenu="Menu"}
 ==================================
 
-Column {data-width=650}
+Column {data-width=667 .tabset}
 -----------------------------------------------------------------------
+### **Sex**
 
-### Chart A
+<div style='display:flex; flex-direction:column; justify-content:space-evenly; align-items:center;'>
 
-```{r}
+<div>
+```{r fig.width = 12}
+ggplot(carrera_clean , 
+       aes(x = sex, y = timerun_minutes, fill = sex)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA) +
+  geom_boxplot(
+    width = 0.12,
+    outlier.color = NA,
+    alpha = 0.5
+  ) +
+  stat_dots(
+    side = "left",
+    justification = 1.1
+  ) +
+  coord_flip() +
+  theme_tq() + 
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none")
 
-g <- correlated_carrera %>%
-    filter(!(feature %in% c("over_median"))) %>%
-    plot_correlation_funnel(interactive = FALSE, limits = c(-0.5, 0.5))
-
-g2 <- g + ggtitle("Funnel de correlación, Tiempo Bajo la Mediana / Tiempo Sobre la Mediana")
-
-ggplotly(g2)
-  
 ```
+</div>
 
-### Chart B
-
+<div>
 ```{r}
-g <- ggplot(CarreraLuz22, aes(edad, timerun, color = sex)) +
-  geom_point(alpha = 0.5)
 
-ggplotly(g)
+carrera_clean %>%                             
+  group_by(sex) %>% 
+  summarize(min = min(timerun_minutes),
+            q1 = quantile(timerun_minutes, 0.25),
+            median = median(timerun_minutes),
+            mean = mean(timerun_minutes),
+            q3 = quantile(timerun_minutes, 0.75),
+            max = max(timerun_minutes)) %>% 
+  mutate(across(where(is.numeric),~ round(.,2))) %>% 
+  knitr::kable() %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "responsive"))
 ```
+</div>
 
-Column {data-width=350}
------------------------------------------------------------------------
+</div>
 
-### Chart C
+### **Rango Edad**
 
-```{r}
+<div style='display:flex; flex-direction:column; justify-content:space-evenly; align-items:center;'>
 
-ggplot(CarreraLuz22 %>%
-         filter(timerun != max(timerun)), aes(x = sex, y = timerun, fill = sex)) +
+<div>
+```{r fig.width = 12}
+
+ggplot(carrera_clean %>% 
+         mutate(rango_edad = fct_reorder(rango_edad, timerun, median)), 
+       aes(x = rango_edad, y = timerun_minutes, fill = rango_edad)) +
   stat_halfeye(adjust = 0.5,
                justification = -0.2,
                .width = 0,
@@ -333,40 +360,118 @@ ggplot(CarreraLuz22 %>%
   ) +
   coord_flip() +
   theme_tq() +
-  scale_fill_tq(theme = "light")
-
-
-
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none")
 
 ```
+</div>
 
-### Chart D
+<div>
+```{r}
+
+carrera_clean %>%     
+  mutate(rango_edad = fct_reorder(rango_edad, timerun, median)) %>% 
+  group_by(rango_edad) %>% 
+  summarize(min = min(timerun_minutes),
+            q1 = quantile(timerun_minutes, 0.25),
+            median = median(timerun_minutes),
+            mean = mean(timerun_minutes),
+            q3 = quantile(timerun_minutes, 0.75),
+            max = max(timerun_minutes)) %>% 
+  mutate(across(where(is.numeric),~ round(.,2))) %>% 
+  knitr::kable(format = "html") %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "responsive"))
+```
+</div>
+
+</div>
+
+Column {data-width=333}
+-----------------------------------------------------------------------
+### **Discusión**
+
+**Analisis Multivariado** {data-navmenu="Menu"}
+==================================
+
+Column {data-width=334}
+-----------------------------------------------------------------------
+### **Sex / Edad**
+
+```{r fig.height= 13, fig.width=10}
+ggplot(carrera_clean , 
+       aes(x = sex, y = timerun_minutes, fill = sex)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA) +
+  geom_boxplot(
+    width = 0.12,
+    outlier.color = NA,
+    alpha = 0.5
+  ) +
+  stat_dots(
+    side = "left",
+    justification = 1.1
+  ) +
+  coord_flip() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  facet_grid(vars(rango_edad)) +
+  theme(legend.position = "none",
+        panel.spacing = unit(0, "lines"),
+        text = element_text(size = 20)) +
+  ylab("Minutos")+
+  xlab(NULL)+
+  scale_y_continuous(breaks = seq(40,110, 20))
+```
+
+Column {data-width=333}
+-----------------------------------------------------------------------
+### **Tabla**
+ <br>
+ <br>
+ <br>
+ <br>
+ <br>
+
+ 
 
 ```{r}
-ggplot(CarreraLuz22 %>%
-         mutate(
-           rango_edad = cut_number(edad, 5)) %>% 
-         filter(timerun != max(timerun)#,
-                #sex == "Mujer"
+carrera_clean %>% 
+  group_by(sex,
+           rango_edad) %>% 
+  summarize(min = min(timerun_minutes),
+            q1 = quantile(timerun_minutes, 0.25),
+            median = median(timerun_minutes),
+            mean = mean(timerun_minutes),
+            q3 = quantile(timerun_minutes, 0.75),
+            max = max(timerun_minutes)) %>% 
+  mutate(across(where(is.numeric),~ round(.,2))) %>% 
+  rename(edad = rango_edad) %>% 
+  DT::datatable(rownames = FALSE,
+                options = list(
+                  "pageLength" = 40,
+                  lengthChange = FALSE,
+                  searching = FALSE,
+                  paging = FALSE,
+                  info = FALSE,
+                  headerCallback = DT::JS(
+                    "function(thead) {",
+                    "  $(thead).css('font-size', '0.9em');",
+                    "}"
+                    ),
+                  order = list(4, 'asc')
+  ),
                 ) %>% 
-         mutate(
-           rango_edad = fct_reorder(rango_edad, timerun, median)), 
-       aes(x = rango_edad, y = timerun, fill = rango_edad)) +
-  stat_halfeye(adjust = 0.5,
-               justification = -0.2,
-               .width = 0,
-               point_colour = NA) +
-  geom_boxplot(
-    width = 0.12,
-    outlier.color = NA,
-    alpha = 0.5
-  ) +
-  stat_dots(
-    side = "left",
-    justification = 1.1
-  ) +
-  coord_flip() +
-  theme_tq() +
-  scale_fill_tq(theme = "light")
+  DT::formatStyle(columns = c(1:8), fontSize = '90%')
 ```
 
+
+
+Column {data-width=333}
+-----------------------------------------------------------------------
+### **Discusión**
+
+
+**Conclusión** {data-navmenu="Menu"}
+==================================
