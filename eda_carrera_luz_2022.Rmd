@@ -22,11 +22,116 @@ text-align: justify;
 }
 </style>
 
-**Introducción** {data-navmenu="Menu"}
+**Introducción** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
 
+Column { data-width=250 }
+-----------------------------------------------------------------------
+### Fecha  {.value-box}
+```{r}
+valueBox(value = "2022-10-23", 
+         caption = "Fecha", 
+         icon = "fa-calendar", 
+         color = "primary")
+```
 
-**Exploración Inicial** {data-navmenu="Menu"}
+### Hora Inicio  {.value-box}
+```{r}
+valueBox(value = "7:00 AM", 
+         caption = "Hora Inicio Aprox.", 
+         icon = "ion-android-alarm-clock", 
+         color = "primary")
+```
+
+### Tiempo Promedio  {.value-box}
+```{r}
+valueBox(value = str_c( (CarreraLuz22$timerun/60) %>% mean() %>% round(digits =2), " MIN"), 
+         caption = "Tiempo Promedio", 
+         icon = "ion-ios-timer", 
+         color = "primary")
+```
+
+### Distancia  {.value-box}
+```{r}
+valueBox(value = "10.07 KM", 
+         caption = "Distancia", 
+         icon = "ion-ios-navigate-outline", 
+         color = "primary")
+```
+
+
+### Maxima paso  {.value-box}
+```{r}
+valueBox(value = str_c( (CarreraLuz22$timerun/60/10.07) %>% min() %>% round(2) , " MIN/KM"),
+         caption = "Mejor Paso", 
+         icon = "ion-android-walk", 
+         color = "primary")
+```
+
+
+Column { data-width=250 }
+-----------------------------------------------------------------------
+
+### Participantes  {.value-box}
+```{r}
+valueBox(value = 1922, 
+         caption = "Participantes", 
+         icon = "ion-ios-people", 
+         color = "primary")
+```
+
+
+### Hora Fin  {.value-box}
+```{r}
+valueBox(value = "9:00 AM", 
+         caption = "Hora Fin Aprox", 
+         icon = "ion-ios-time-outline", 
+         color = "primary")
+```
+
+### Tiempo Mediana  {.value-box}
+```{r}
+valueBox(value = str_c( (CarreraLuz22$timerun/60) %>% median() %>% round(digits =2), " MIN"), 
+         caption = "Tiempo Mediana", 
+         icon = "ion-ios-stopwatch-outline", 
+         color = "primary")
+```
+
+
+### Mejor velocidad  {.value-box}
+```{r}
+valueBox(value = str_c((10070/min(CarreraLuz22$timerun)) %>% round(2)," M/S"), 
+         caption = "Mejor velocidad", 
+         icon = "ion-ios-speedometer-outline", 
+         color = "primary")
+```
+
+### Mejor tiempo  {.value-box}
+```{r}
+valueBox(value = str_c((CarreraLuz22$timerun/60) %>% min() %>% round(digits =2), " MIN"), 
+         caption = "Mejor Tiempo", 
+         icon = "ion-android-stopwatch", 
+         color = "primary")
+```
+
+
+
+Column { data-width=500 }
+-----------------------------------------------------------------------
+### 10K Luz
+
+
+What is Lorem Ipsum?
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+
+
+### **Recorrido**
+
+![](https://juanchocorrelon.com/wp-content/uploads/Mapa-10K-Luz-sep.jpg)
+
+
+**Exploración Inicial** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
 
 
@@ -166,7 +271,7 @@ Column {data-width=250}
 -----------------------------------------------------------------------
 ### **Discusión**
 
-**Ingeniería de características y limpieza** {data-navmenu="Menu"}
+**Ingeniería de características y limpieza** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
 
 Column {data-width=500}
@@ -243,7 +348,7 @@ ggplotly(g)
 
 ### **Discusión**
 
-**Embudo de Correlación** {data-navmenu="Menu"}
+**Embudo de Correlación** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
 
 Column {data-width=333}
@@ -282,7 +387,7 @@ Column {data-width=250}
 
 ### **Discusión**
 
-**Analisis Univariado** {data-navmenu="Menu"}
+**Analisis Univariado** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
 
 Column {data-width=667 .tabset}
@@ -390,7 +495,7 @@ Column {data-width=333}
 -----------------------------------------------------------------------
 ### **Discusión**
 
-**Analisis Multivariado** {data-navmenu="Menu"}
+**Analisis Multivariado** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
 
 Column {data-width=334}
@@ -473,5 +578,7 @@ Column {data-width=333}
 ### **Discusión**
 
 
-**Conclusión** {data-navmenu="Menu"}
+**Conclusión** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
+
+![](https://juanchocorrelon.com/wp-content/uploads/bannerluz2022-1-min-scaled.jpg)
