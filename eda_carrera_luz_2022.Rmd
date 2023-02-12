@@ -624,13 +624,21 @@ Column {data-width=333}
 
 **Conclusión** {data-navmenu="Da Clic Aquí para el Menú"}
 ==================================
+<div style='display:flex; flex-direction:column; justify-content:space-evenly; align-items:center;'>
+
+<div>
 
 Después de analizar las diferentes variables en el conjunto de datos de la CarreraLuz22, solo encontramos una relación entre la variable "timerun" y la variable "sex", en el cual el tiempo mediano de los hombres es 8 minutos menor que el tiempo mediano de las mujeres en este conjunto de datos específico. Sin embargo, se detectó la posible existencia de otras variables que expliquen de manera más efectiva la variable "timerun", pero que no se encuentran en el conjunto de datos.
 
 Es importante destacar que este solo es un ejercicio exploratorio que tiene como objetivo describir los datos mencionados, y se recomienda realizar estudios más rigurosos para llegar a cualquier tipo de inferencia respecto a los tiempos de carrera en este tipo de competencias.
 
 <hr>
+</div>
 
-```{r}
+<div>
+
+```{r, out.width = "1000px"}
 include_graphics("https://juanchocorrelon.com/wp-content/uploads/bannerluz2022-1-min-scaled.jpg")
 ```
+
+</div>
