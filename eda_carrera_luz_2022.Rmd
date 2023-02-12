@@ -620,7 +620,7 @@ Column {data-width=333}
 -----------------------------------------------------------------------
 ### **Discusión**
 
-"En base a los resultados obtenidos como se muestra a través de las gráficas y la tabla, podemos decir que existe una diferencia en los tiempos de carrera entre hombres y mujeres, sin importar el rango de edad. Además, el análisis muestra que el rango de edad no es un factor determinante en la velocidad de carrera. Una vez más al observar la presencia de múltiples modalidades en los resultados, podemos concluir que hay variables no incluidas en el conjunto de datos que podrían ayudar a comprender de manera más completa los tiempos de carrera."
+En base a los resultados obtenidos como se muestra a través de las gráficas y la tabla, podemos decir que existe una diferencia en los tiempos de carrera entre hombres y mujeres, sin importar el rango de edad. Además, el análisis muestra que el rango de edad no es un factor determinante en la velocidad de carrera. Una vez más al observar la presencia de múltiples modalidades en los resultados, podemos concluir que hay variables no incluidas en el conjunto de datos que podrían ayudar a comprender de manera más completa los tiempos de carrera.
 
 **Conclusión** {data-navmenu="Da Clic Aquí para el Menú"}
 ==================================
