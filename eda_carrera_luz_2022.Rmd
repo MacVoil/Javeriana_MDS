@@ -1,9 +1,12 @@
 ---
-title: "EDA Carrera Luz"
+title: "Analisis Explorartorio Inicial 10K de la Luz 2022"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
+    navbar:
+      - { title: "Study Repository", icon: "fa-github", href: "https://github.com/MacVoil/Javeriana_MDS/" }
+    favicon: favicon.ico
 ---
 
 ```{r setup, include=FALSE}
@@ -14,6 +17,7 @@ library(plotly)
 library(correlationfunnel)
 library(ggdist)
 library(tidyquant)
+library(rapportools)
 ```
 
 <style>
@@ -118,13 +122,25 @@ valueBox(value = str_c((CarreraLuz22$timerun/60) %>% min() %>% round(digits =2),
 
 Column { data-width=500 }
 -----------------------------------------------------------------------
-### 10K Luz
+### **10K de la Luz**
 
+***PARA NAVEGAR POR ESTE ESTUDIO POR FAVOR DAR CLIC EN EL MENU UBICADO EN LA PARTE SUPERIOR IZQUIERDA AL LADO DEL TITULO***
+<hr>
 
-What is Lorem Ipsum?
+El 10K de la Luz se llevó a cabo en la ciudad de Cali en octubre de 2022, con el objetivo de promover el deporte y la salud en la comunidad. 
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+Este evento atrajo a muchos corredores de diferentes edades y niveles de habilidad, quienes compitieron en un recorrido de 10 kilómetros a través de las calles de la ciudad.
 
+Para analizar los resultados de la carrera, se realizó una breve exploración de los datos incluidos en el data set `CarreraLuz22` en la libreria `paqueteMET` disponible en:
+[https://github.com/dgonxalex80/paqueteMET](https://github.com/dgonxalex80/paqueteMET){target="_blank"}.
+
+El objetivo de esta exploración fue observar si hay algunas variables que estén relacionadas con los tiempos de finalización de la carrera.
+
+Además de los datos, se utilizó información e imágenes obtenidas de: [https://juanchocorrelon.com/intercontinental-10k-luz-2022/](https://juanchocorrelon.com/intercontinental-10k-luz-2022/){target="_blank"}.
+
+<hr>
+
+El presente ejercicio fue llevado a cabo por Camilo Vega Ramírez como parte del curso Métodos y Simulación Estadística de la Maestría en Ciencia de Datos de la Pontificia Universidad Javeriana en Cali.
 
 ### **Recorrido**
 
@@ -271,6 +287,18 @@ Column {data-width=250}
 -----------------------------------------------------------------------
 ### **Discusión**
 
+* **Time Run:** Es la variable objetivo de nuestro análisis, con una media de `r CarreraLuz22$timerun %>% mean() %>% round(2) ` segundos, y una mediana de `r CarreraLuz22$timerun %>% median() %>% round(2)` segundos. La distribución presenta una moderada asimetría positiva (skewness: `r CarreraLuz22$timerun %>% skewness() %>% round(2)`). Cuenta un valor atípico extremo de `r CarreraLuz22$timerun %>% max() %>% round(2)` segundos.
+
+* **Edad:** Cuenta con una media de `r CarreraLuz22$edad %>% mean() %>% round(2) ` años, y una mediana de `r CarreraLuz22$edad %>% median() %>% round(2)` años. La distribución presenta una moderada asimetría positiva (skewness: `r CarreraLuz22$edad %>% skewness() %>% round(2)`).
+
+* **Origen:** La variable Origen se encuentra desequilibrada, con aproximadamente el 86% de los participantes provenientes de Cali y el restante 14% de otras 48 ciudades. Debido a esto, descartaremos esta variable en nuestro análisis.
+
+* **Sex:**  La proporción de participantes mujeres es aproximadamente del 39% y la de hombres es del 61%.
+
+* **Categoria:** La variable categoría está desequilibrada, con la categoría abierta siendo la de más participantes (aprox. 61%). Debido a esto, descartaremos esta variable en nuestro análisis. Sin embargo, dado que la variable edad presenta solo una moderada asimetría positiva, se seguiere refactorizando los rangos de edad en categorías equilibradas.
+
+* **Nacionalidad:**  La variable nacionalidad se encuentra desequilibrada, con aproximadamente el 99% de los participantes siendo colombianos y el restante 1% de otras 5 nacionalidades. Debido a esto, descartaremos esta variable en nuestro análisis.
+
 **Ingeniería de características y limpieza** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
 
@@ -312,6 +340,23 @@ ggplot(carrera_clean , aes( y = timerun_minutes)) +
   xlab("")
 ```
 
+### **Tiempos por arriba (FALSE) y por bajo (TRUE) de la mediana**
+
+```{r}
+g <- ggplot(carrera_clean , 
+            aes(x = time_under_mean, fill = time_under_mean)) +
+  geom_bar() +
+  theme_tq() +
+  scale_fill_tq(theme = "light") +
+  theme(legend.position = "none") +
+  coord_flip() +
+  xlab("") 
+
+ggplotly(g)
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
 
 ### **Edades por rangos con obervaciones similares**
 
@@ -328,25 +373,16 @@ g <- ggplot(carrera_clean ,
 ggplotly(g)
 ```
 
-Column {data-width=667}
------------------------------------------------------------------------
-
-### **Tiempos por arriba (FALSE) y por bajo (TRUE) de la mediana**
-
-```{r}
-g <- ggplot(carrera_clean , 
-            aes(x = time_under_mean, fill = time_under_mean)) +
-  geom_bar() +
-  theme_tq() +
-  scale_fill_tq(theme = "light") +
-  theme(legend.position = "none") +
-  coord_flip() +
-  xlab("") 
-
-ggplotly(g)
-```
-
 ### **Discusión**
+
+* **Time Rum:** Para facilitar la comprensión, se ha creado la variable `timerun_minutes` ue muestra el tiempo de carrera en minutos. Además, se ha eliminado el valor atípico extremo. Con estas modificaciones, el tiempo promedio se convierte en  `r carrera_clean$timerun_minutes %>% mean() %>% round(2)` minutos, la mediana en `r carrera_clean$timerun_minutes %>% median() %>% round(2)` minutos y la asimetría (skewness) se reduce a 0.46, lo que se asemeja más a una distribución normal.
+
+* **Rango Edades:** Se ha utilizado la función `cut_number()` de la libreria `ggplot2` para crear la variable `rango_edad`, que distribuye las edades en rangos con una cantidad más similar de observaciones.
+
+* **Tiempo Bajo Mediana:** Se ha creado la variable `time_under_mean` para identificar de manera binaria aquellas observaciones cuya tiempo se encuentra por debajo `TRUE` o por encima de la mediana `FALSE` Esta variable será utilizada en un análisis de correlación con las variables categóricas `timerun_minutes` y `rango_edad`.
+
+
+
 
 **Embudo de Correlación** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
@@ -387,6 +423,14 @@ Column {data-width=250}
 
 ### **Discusión**
 
+Se utilizó la técnica de embudo de correlación, tal como se describe en la [guía](https://business-science.github.io/correlationfunnel/articles/introducing_correlation_funnel.html){target="_blank"} de la librería correlationfunnel. Se pudo observar que:
+
+* **Sex:** El género masculino presenta una correlación leve con los tiempos por debajo de la mediana y el género femenino presenta una correlación leve con los tiempos por encima de la mediana.
+
+* **Rango Edad:** Las edades entre 34 y 46 años presentan una correlación muy débil con los tiempos por debajo de la mediana, mientras que las edades entre 15 y 33 años y entre 47 y 76 años presentan una correlación muy débil con los tiempos por encima de la mediana.
+
+Posteriormente, se realizarán comparaciones univariadas de `sex` contra `timerun_minutes` y de `sex` contra `rango_edad`, así como una comparación multivariada de `sex` contra `timerun_minutes` y `rango_edad`, estas dos ultimas solo a manera de ejercicio debido a que, como se pudo observar, la correlación entre los tiempos de carrera y los rangos de edad es prácticamente inexistente.
+
 **Analisis Univariado** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
 
@@ -397,7 +441,7 @@ Column {data-width=667 .tabset}
 <div style='display:flex; flex-direction:column; justify-content:space-evenly; align-items:center;'>
 
 <div>
-```{r fig.width = 12}
+```{r fig.width = 10}
 ggplot(carrera_clean , 
        aes(x = sex, y = timerun_minutes, fill = sex)) +
   stat_halfeye(adjust = 0.5,
@@ -445,7 +489,7 @@ carrera_clean %>%
 <div style='display:flex; flex-direction:column; justify-content:space-evenly; align-items:center;'>
 
 <div>
-```{r fig.width = 12}
+```{r fig.width = 10}
 
 ggplot(carrera_clean %>% 
          mutate(rango_edad = fct_reorder(rango_edad, timerun, median)), 
@@ -494,6 +538,11 @@ carrera_clean %>%
 Column {data-width=333}
 -----------------------------------------------------------------------
 ### **Discusión**
+
+* **Tiempo por Genero:** En los datos obtenidos, se puede observar que en general, los hombres obtienen tiempos de carrera más rápidos que las mujeres. Aunque esto se puede ver claramente en la gráfica y la tabla, también es importante tener en cuenta que ambas distribuciones no son uniformes y presentan señales de bimodalidad, lo que sugiere la existencia de otras variables que aún no han sido descritas y que pueden tener un impacto en la velocidad por género.
+
+* **Tiempo por Rango de Edad:** En cuanto a los tiempos de carrera por rango de edad, aunque las medianas son distintas entre los diferentes grupos de edad, los rangos intercuartiles son muy similares para la mayoría de los grupos. Además, también es posible notar múltiples modalidades en los datos, lo que indica que puede existir alguna otra variable no analizada que pueda explicar mejor los tiempos de carrera.
+
 
 **Analisis Multivariado** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
@@ -577,8 +626,14 @@ Column {data-width=333}
 -----------------------------------------------------------------------
 ### **Discusión**
 
+"En base a los resultados obtenidos como se muestra a través de las gráficas y la tabla, podemos decir que existe una diferencia en los tiempos de carrera entre hombres y mujeres, sin importar el rango de edad. Además, el análisis muestra que el rango de edad no es un factor determinante en la velocidad de carrera. Una vez más al observar la presencia de múltiples modalidades en los resultados, podemos concluir que hay variables no incluidas en el conjunto de datos que podrían ayudar a comprender de manera más completa los tiempos de carrera."
 
 **Conclusión** {data-navmenu="Da Clic Aquí para el Menu"}
 ==================================
+
+Después de analizar las diferentes variables en el conjunto de datos de la CarreraLuz22, solo encontramos una relación entre la variable "timerun" y la variable "sex", en el cual el tiempo mediano de los hombres es 8 minutos menor que el tiempo mediano de las mujeres en este conjunto de datos específico. Sin embargo, se detectó la posible existencia de otras variables que expliquen de manera más efectiva la variable "timerun", pero que no se encuentran en el conjunto de datos.
+
+Es importante destacar que este solo es un ejercicio exploratorio que tiene como objetivo describir los datos mencionados, y se recomienda realizar estudios más rigurosos para llegar a cualquier tipo de inferencia respecto a los tiempos de carrera en este tipo de competencias.
+
 
 ![](https://juanchocorrelon.com/wp-content/uploads/bannerluz2022-1-min-scaled.jpg)
