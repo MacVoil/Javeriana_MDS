@@ -18,6 +18,7 @@ library(correlationfunnel)
 library(ggdist)
 library(tidyquant)
 library(rapportools)
+library(knitr)
 ```
 
 <style>
@@ -124,7 +125,7 @@ Column { data-width=500 }
 -----------------------------------------------------------------------
 ### **10K de la Luz**
 
-***PARA NAVEGAR POR ESTE ESTUDIO POR FAVOR DAR CLIC EN EL MENÚ UBICADO EN LA PARTE SUPERIOR IZQUIERDA AL LADO DEL TITULO***
+***PARA NAVEGAR POR ESTE ESTUDIO POR FAVOR DAR CLIC EN EL MENÚ UBICADO EN LA PARTE SUPERIOR IZQUIERDA AL LADO DEL TÍTULO***
 <hr>
 
 El 10K de la Luz se llevó a cabo en la ciudad de Cali en octubre de 2022, con el objetivo de promover el deporte y la salud en la comunidad. 
@@ -604,13 +605,13 @@ carrera_clean %>%
                   info = FALSE,
                   headerCallback = DT::JS(
                     "function(thead) {",
-                    "  $(thead).css('font-size', '0.9em');",
+                    "  $(thead).css('font-size', '0.7em');",
                     "}"
                     ),
                   order = list(4, 'asc')
   ),
                 ) %>% 
-  DT::formatStyle(columns = c(1:8), fontSize = '90%')
+  DT::formatStyle(columns = c(1:8), fontSize = '70%')
 ```
 
 
@@ -630,4 +631,6 @@ Es importante destacar que este solo es un ejercicio exploratorio que tiene como
 
 <hr>
 
-![](https://juanchocorrelon.com/wp-content/uploads/bannerluz2022-1-min-scaled.jpg)
+```{r}
+include_graphics("https://juanchocorrelon.com/wp-content/uploads/bannerluz2022-1-min-scaled.jpg")
+```
