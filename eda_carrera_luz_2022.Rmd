@@ -582,13 +582,6 @@ ggplot(carrera_clean ,
 Column {data-width=333}
 -----------------------------------------------------------------------
 ### **Tabla**
- <br>
- <br>
- <br>
- <br>
- <br>
-
- 
 
 ```{r}
 carrera_clean %>% 
