@@ -65,7 +65,7 @@ sample_prop(plantas_enfermas_50,500)
 
 ### c. Repita el escenario anterior (b) n=500 veces y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador $\hat{p}$. ¿Qué tan simétricos o sesgados son los resultados obtenidos? y ¿qué se puede observar en cuanto a la variabilidad?. Realice en su informe un comentario sobre los resultados obtenidos.
 
-```{r fig.height=3}
+```{r fig.height=2.5}
 rep_sample_prop <- function(x, n, rep){
     map_dbl(1:rep, ~ sample_prop(x,n))
 }
@@ -97,7 +97,7 @@ ggplot(muesta_repetida_50 %>% as_tibble() , aes( y = value)) +
 
 ### d. Repita los puntos b y c para tamaños de muestra n=5, 10, 15, 20, 30, 50, 60, 100, 200, 500. Compare los resultados obtenidos para los diferentes tamaños de muestra en cuanto a la normalidad. Utilice pruebas de bondad y ajuste (shapiro wilks :shspiro.test()) y métodos gráficos (grafico de normalidad: qqnorm()). Comente ensu informe los resultados obtenidos.
 
-```{r fig.height=10}
+```{r fig.height=5}
 
 set.seed(4321)
 
@@ -123,9 +123,10 @@ ggplot(muesta_repetida_multiple_50,  aes(sample = p_hat)) +
     facet_wrap(vars( factor(str_c("n = ",n), 
                             levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
                                                       100, 200, 500))))), 
-               nrow =  5, scales = "free") +
-    theme_tq()
-    
+               nrow =  4, scales = "free") +
+    theme_tq() +
+    theme(panel.spacing = unit(0, "lines"),
+          text = element_text(size = 8))
 
 ```
 
@@ -133,7 +134,7 @@ ggplot(muesta_repetida_multiple_50,  aes(sample = p_hat)) +
 ### e. Repita toda la simulación (puntos a – d), pero ahora para lotes con 10% de plantas enfermas y de nuevo para lotes con un 90% de plantas enfermas. Concluya sobre los resultados del ejercicio.
 
 
-```{r fig.height=3}
+```{r fig.height=2.5}
 plantas_enfermas_10 <- sim_plantas_enfermas(1000, 0.1)
 
 table(plantas_enfermas_10) %>% 
@@ -168,7 +169,7 @@ ggplot(muesta_repetida_10 %>% as_tibble() , aes( y = value)) +
     ylab(expression(hat("p")))
 ```
 
-```{r fig.height=10}
+```{r fig.height=5}
 set.seed(1234)
 
 muesta_repetida_multiple_10 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
@@ -193,12 +194,14 @@ ggplot(muesta_repetida_multiple_10,  aes(sample = p_hat)) +
     facet_wrap(vars( factor(str_c("n = ",n), 
                             levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
                                                       100, 200, 500))))), 
-               nrow =  5, scales = "free") +
-    theme_tq()
+               nrow =  4, scales = "free") +
+    theme_tq() +
+    theme(panel.spacing = unit(0, "lines"),
+          text = element_text(size = 8))
 
 ```
 
-```{r fig.height=3}
+```{r fig.height=2.5}
 plantas_enfermas_90 <- sim_plantas_enfermas(1000, 0.9)
 
 table(plantas_enfermas_90) %>% 
@@ -233,7 +236,7 @@ ggplot(muesta_repetida_90 %>% as_tibble() , aes( y = value)) +
     ylab(expression(hat("p")))
 ```
 
-```{r fig.height=10}
+```{r fig.height=5}
 set.seed(1234)
 
 muesta_repetida_multiple_90 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
@@ -258,8 +261,9 @@ ggplot(muesta_repetida_multiple_90,  aes(sample = p_hat)) +
     facet_wrap(vars( factor(str_c("n = ",n), 
                             levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
                                                       100, 200, 500))))), 
-               nrow =  5, scales = "free") +
-    theme_tq()
-
+               nrow =  4, scales = "free") +
+    theme_tq() +
+    theme(panel.spacing = unit(0, "lines"),
+          text = element_text(size = 8))
 ```
 
