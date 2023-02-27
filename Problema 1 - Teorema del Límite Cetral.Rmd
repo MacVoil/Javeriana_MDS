@@ -1,0 +1,265 @@
+---
+title: "Problema1  -  Teorema del Límite Central"
+author: "Carlos Sierra Guzman, Camilo Vega Rámirez"
+date: "2023-02-27"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE, include=TRUE, paged.print=FALSE}
+library(tidyverse)
+library(knitr)
+library(ggdist)
+library(tidyquant)
+library(nortest)
+library(qqplotr)
+```
+
+
+# Teorema del Límite Central
+
+
+El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la proporción muestral a la distribución normal. Algunos autores afirman que esta aproximación es bastante buena a partir del umbral n>30.
+
+A continuación se describen los siguientes pasos para su verificación:
+
+### a. Realice una simulación en la cual genere una población de N=1000 (Lote), donde el porcentaje de individuos (supongamos plantas) enfermas sea del 50%.
+
+
+```{r paged.print=TRUE}
+
+sim_plantas_enfermas <- function(n, prop){
+    p <- round(n*prop)
+    q <- n-p
+    c(rep(TRUE,p), rep(FALSE,q))
+}
+
+plantas_enfermas_50 <- sim_plantas_enfermas(1000, 0.5)
+
+table(plantas_enfermas_50) %>% 
+    as_tibble() %>% 
+    kable()
+```
+
+
+### b. Genere una función que permita:
+
+* Obtener una muestra aleatoria de la población y
+* Calcule el estimador de la proporción muestral $\hat{p}$ para un tamaño de muestra dado n.
+
+```{r}
+
+sample_prop <- function(x, n){
+    sample(x, n) %>% 
+        sum()/n
+}
+
+set.seed(4321)
+
+sample_prop(plantas_enfermas_50,500)
+
+```
+
+### c. Repita el escenario anterior (b) n=500 veces y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador $\hat{p}$. ¿Qué tan simétricos o sesgados son los resultados obtenidos? y ¿qué se puede observar en cuanto a la variabilidad?. Realice en su informe un comentario sobre los resultados obtenidos.
+
+```{r fig.height=3}
+rep_sample_prop <- function(x, n, rep){
+    map_dbl(1:rep, ~ sample_prop(x,n))
+}
+
+set.seed(4321)
+
+muesta_repetida_50 <-  rep_sample_prop(plantas_enfermas_50,500, 500)
+
+muesta_repetida_50 %>% 
+    as_tibble() %>% 
+    summarise(mean = mean(value), median = median(value), sd = sd(value)) %>% 
+    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
+    kable()
+
+
+ggplot(muesta_repetida_50 %>% as_tibble() , aes( y = value)) +
+    stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA,
+                 fill = "#1F78B4") +
+    geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5, fill = "#1F78B4") +
+    stat_dots(side = "left", justification = 1.1, fill = "#1F78B4") +
+    coord_flip() +
+    theme_tq() +
+    scale_fill_tq(theme = "light") +
+    theme(axis.text.y = element_blank()) +
+    xlab("") +
+    ylab(expression(hat("p")))
+
+```
+
+### d. Repita los puntos b y c para tamaños de muestra n=5, 10, 15, 20, 30, 50, 60, 100, 200, 500. Compare los resultados obtenidos para los diferentes tamaños de muestra en cuanto a la normalidad. Utilice pruebas de bondad y ajuste (shapiro wilks :shspiro.test()) y métodos gráficos (grafico de normalidad: qqnorm()). Comente ensu informe los resultados obtenidos.
+
+```{r fig.height=10}
+
+set.seed(4321)
+
+muesta_repetida_multiple_50 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
+                                    ~ tibble(
+                                        p_hat = rep_sample_prop(plantas_enfermas_50, 
+                                                                ., 500),
+                                        n = as_factor(.)))
+
+muesta_repetida_multiple_50 %>% 
+    group_by(n) %>% 
+    summarise(mean = mean(p_hat), median = median(p_hat), sd = sd(p_hat),
+              `Shapiro test P-Value` = shapiro.test(p_hat)$p.value, 
+              `Anderson-Darling test P-Value` = ad.test(p_hat)$p.value) %>% 
+    ungroup() %>% 
+    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
+    kable()
+
+ggplot(muesta_repetida_multiple_50,  aes(sample = p_hat)) +
+    stat_qq_band(alpha = 0.5) +
+    stat_qq_line(linewidth = 0.1) +
+    stat_qq_point(alpha = 0.5, size = 0) +
+    facet_wrap(vars( factor(str_c("n = ",n), 
+                            levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
+                                                      100, 200, 500))))), 
+               nrow =  5, scales = "free") +
+    theme_tq()
+    
+
+```
+
+
+### e. Repita toda la simulación (puntos a – d), pero ahora para lotes con 10% de plantas enfermas y de nuevo para lotes con un 90% de plantas enfermas. Concluya sobre los resultados del ejercicio.
+
+
+```{r fig.height=3}
+plantas_enfermas_10 <- sim_plantas_enfermas(1000, 0.1)
+
+table(plantas_enfermas_10) %>% 
+    as_tibble() %>% 
+    kable()
+
+# set.seed(1234)
+# 
+# sample_prop(plantas_enfermas_10,500)
+
+set.seed(1234)
+
+muesta_repetida_10 <-  rep_sample_prop(plantas_enfermas_10,500, 500)
+
+muesta_repetida_10 %>% 
+    as_tibble() %>% 
+    summarise(mean = mean(value), median = median(value), sd = sd(value)) %>% 
+    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
+    kable()
+
+
+ggplot(muesta_repetida_10 %>% as_tibble() , aes( y = value)) +
+    stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA,
+                 fill = "#1F78B4") +
+    geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5, fill = "#1F78B4") +
+    stat_dots(side = "left", justification = 1.1, fill = "#1F78B4") +
+    coord_flip() +
+    theme_tq() +
+    scale_fill_tq(theme = "light") +
+    theme(axis.text.y = element_blank()) +
+    xlab("") +
+    ylab(expression(hat("p")))
+```
+
+```{r fig.height=10}
+set.seed(1234)
+
+muesta_repetida_multiple_10 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
+                                    ~ tibble(
+                                        p_hat = rep_sample_prop(plantas_enfermas_10, 
+                                                                ., 500),
+                                        n = as_factor(.)))
+
+muesta_repetida_multiple_10 %>% 
+    group_by(n) %>% 
+    summarise(mean = mean(p_hat), median = median(p_hat), sd = sd(p_hat),
+              `Shapiro test P-Value` = shapiro.test(p_hat)$p.value, 
+              `Anderson-Darling test P-Value` = ad.test(p_hat)$p.value) %>% 
+    ungroup() %>% 
+    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
+    kable()
+
+ggplot(muesta_repetida_multiple_10,  aes(sample = p_hat)) +
+    stat_qq_band(alpha = 0.5) +
+    stat_qq_line(linewidth = 0.1) +
+    stat_qq_point(alpha = 0.5, size = 0) +
+    facet_wrap(vars( factor(str_c("n = ",n), 
+                            levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
+                                                      100, 200, 500))))), 
+               nrow =  5, scales = "free") +
+    theme_tq()
+
+```
+
+```{r fig.height=3}
+plantas_enfermas_90 <- sim_plantas_enfermas(1000, 0.9)
+
+table(plantas_enfermas_90) %>% 
+    as_tibble() %>% 
+    kable()
+
+# set.seed(1234)
+# 
+# sample_prop(plantas_enfermas_90,500)
+
+set.seed(1234)
+
+muesta_repetida_90 <-  rep_sample_prop(plantas_enfermas_90, 500, 500)
+
+muesta_repetida_90 %>% 
+    as_tibble() %>% 
+    summarise(mean = mean(value), median = median(value), sd = sd(value)) %>% 
+    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
+    kable()
+
+
+ggplot(muesta_repetida_90 %>% as_tibble() , aes( y = value)) +
+    stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA,
+                 fill = "#1F78B4") +
+    geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5, fill = "#1F78B4") +
+    stat_dots(side = "left", justification = 1.1, fill = "#1F78B4") +
+    coord_flip() +
+    theme_tq() +
+    scale_fill_tq(theme = "light") +
+    theme(axis.text.y = element_blank()) +
+    xlab("") +
+    ylab(expression(hat("p")))
+```
+
+```{r fig.height=10}
+set.seed(1234)
+
+muesta_repetida_multiple_90 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
+                                    ~ tibble(
+                                        p_hat = rep_sample_prop(plantas_enfermas_90, 
+                                                                ., 500),
+                                        n = as_factor(.)))
+
+muesta_repetida_multiple_90 %>% 
+    group_by(n) %>% 
+    summarise(mean = mean(p_hat), median = median(p_hat), sd = sd(p_hat),
+              `Shapiro test P-Value` = shapiro.test(p_hat)$p.value, 
+              `Anderson-Darling test P-Value` = ad.test(p_hat)$p.value) %>% 
+    ungroup() %>% 
+    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
+    kable()
+
+ggplot(muesta_repetida_multiple_90,  aes(sample = p_hat)) +
+    stat_qq_band(alpha = 0.5) +
+    stat_qq_line(linewidth = 0.1) +
+    stat_qq_point(alpha = 0.5, size = 0) +
+    facet_wrap(vars( factor(str_c("n = ",n), 
+                            levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
+                                                      100, 200, 500))))), 
+               nrow =  5, scales = "free") +
+    theme_tq()
+
+```
+
