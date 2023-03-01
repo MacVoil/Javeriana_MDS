@@ -16,6 +16,7 @@ text-align: justify;
 }
 </style>
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -28,16 +29,19 @@ chunkref <- local({
 
 ```
 
+----
+
 ## Introducción
 
 El presente documento es la respuesta al problema 1 de la Unidad 2 del curso Métodos y Simulación Estidística.
 
-Cada seccion esta compuesta por el puto a resolver, metodologia y resultado. 
+Cada seccion esta compuesta por el puto a resolver, metodologia y resultado.
 
 Al final del documuento se encuentra como anexos los códigos usados para la creación de las metodologias de las secciones, y se cuentan con links en el cuerpo del documento para navegar a travez del mismo.
 
 ```{r librerias, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 library(tidyverse)      # Transformación de datos
+library(normtest)       # Pruebas de normalidad
 library(knitr)          # Renderizar tablas
 library(ggdist)         # Expanción de graficas de ggplot
 library(tidyquant)      # Tema de graficas de ggplot
@@ -50,21 +54,19 @@ library(qqplotr)        # QQplot usando ggplot
 
 > *Teorema del Límite Central*
 
-
-> *El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la proporción muestral a la distribución normal. Algunos autores afirman que esta aproximación es bastante buena a partir del umbral n>30.*
+> *El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la proporción muestral a la distribución normal. Algunos autores afirman que esta aproximación es bastante buena a partir del umbral n\>30.*
 
 > *A continuación se describen los siguientes pasos para su verificación:*
 
-----
+------------------------------------------------------------------------
 
 ## Sección A
 
 ### Punto A a Resolver
 
->*a. Realice una simulación en la cual genere una población de N=1000 (Lote), donde el porcentaje de individuos (supongamos plantas) enfermas sea del 50%.*
+> *a. Realice una simulación en la cual genere una población de N=1000 (Lote), donde el porcentaje de individuos (supongamos plantas) enfermas sea del 50%.*
 
-
-### Metodología Punto A
+### Metodología Punto A {#metodología-punto-a}
 
 Se crea la función `sim_plantas_enfermas` para simular la una proporción de plantas enfermas dada una población.
 
@@ -91,19 +93,19 @@ table(plantas_enfermas_50) %>%
     kable()
 ```
 
-----
+------------------------------------------------------------------------
 
 ## Sección B
 
 ### Punto B a Resolver
 
-> *b. Genere una función que permita: Obtener una muestra aleatoria de la población y Calcule el estimador de la proporción muestral $\hat{p}$ para un tamaño de muestra dado n.*
+> *b. Genere una función que permita: Obtener una muestra aleatoria de la población y Calcule el estimador de la proporción muestral* $\hat{p}$ para un tamaño de muestra dado n.
 
-### Metodología Punto B
+### Metodología Punto B {#metodología-punto-b}
 
 Se crea la función `sample_prop` para extraer `n` muestras de un vector `x`.
 
-Se verifica el funcionamiento de la función para un `n = 500` sobre la población simulada. 
+Se verifica el funcionamiento de la función para un `n = 500` sobre la población simulada.
 
 [Ir a código sección b](#código-b)
 
@@ -126,13 +128,13 @@ sample_prop(plantas_enfermas_50,500))
 
 ```
 
-----
+------------------------------------------------------------------------
 
 ## Sección C
 
-### Metodología Punto C
+### Punto C a Resolver
 
-> *c. Repita el escenario anterior (b) n=500 veces y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador $\hat{p}$. ¿Qué tan simétricos o sesgados son los resultados obtenidos? y ¿qué se puede observar en cuanto a la variabilidad?. Realice en su informe un comentario sobre los resultados obtenidos.*
+> *c. Repita el escenario anterior (b) n=500 veces y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador* $\hat{p}$. ¿Qué tan simétricos o sesgados son los resultados obtenidos? y ¿qué se puede observar en cuanto a la variabilidad?. Realice en su informe un comentario sobre los resultados obtenidos.
 
 ### Metodología Punto C
 
@@ -145,7 +147,6 @@ Se crea la función `gg_rain_cloud`, que toma un vector y genera un grafico de r
 Se crea la función `medidas_resumen`, que toma un vector y muestra en forma de tabla medidas de resumen respecto a simetria, sesgo y variabilidad.
 
 Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones para su analisis.
-
 
 [Ir a código sección c](#código-c)
 
@@ -165,7 +166,7 @@ set.seed(4321)
 muesta_repetida_50 <-  rep_sample_prop(plantas_enfermas_50,500, 500)
 
 # Función para crear grafico de rain cloud sobre un vector
-gg_rain_cloud <- function(x, title){
+gg_rain_cloud <- function(x, title, subtitle){
     ggplot(x %>% as_tibble() , aes( y = value)) +
     stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA,
                  fill = "#1F78B4") +
@@ -178,7 +179,8 @@ gg_rain_cloud <- function(x, title){
           text = element_text(size = 8)) +
     xlab("") +
     ylab(expression(hat("p"))) +
-    ggtitle(label = title)
+    ggtitle(label = title,
+            subtitle = subtitle)
 }
 
 # Función para crear tabla con medidas de resumen sobre un vector
@@ -196,8 +198,9 @@ medidas_resumen <-  function(x){
 # n = 500, sobre la población simulada
 gg_rain_cloud(
     muesta_repetida_50, 
-    "Distribución estimador para 500 repeticiones con n = 500"
-    ); medidas_resumen(muesta_repetida_50)
+    "Distribución estimador para 500 repeticiones con n = 500",
+    "50% plantas enfermas")
+medidas_resumen(muesta_repetida_50)
 
 ```
 
@@ -205,47 +208,91 @@ Con un tamaño de muestra n = 500 y 500 repeticiones, se observa que los estimad
 
 Todo lo anterior nos muestra que con un tamaño de muestra de n = 500 la distribución de los estimadores se asemeja a una distribución normal y muestran una buena aproximación a la proporción real de la población.
 
-----
+------------------------------------------------------------------------
+
+## Sección D
+
+### Punto D a Resolver
+
+> *d. Repita los puntos b y c para tamaños de muestra n=5, 10, 15, 20, 30, 50, 60, 100, 200, 500. Compare los resultados obtenidos para los diferentes tamaños de muestra en cuanto a la normalidad. Utilice pruebas de bondad y ajuste (shapiro wilks :shspiro.test()) y métodos gráficos (grafico de normalidad: qqnorm()). Comente ensu informe los resultados obtenidos.*
 
 
-### d. Repita los puntos b y c para tamaños de muestra n=5, 10, 15, 20, 30, 50, 60, 100, 200, 500. Compare los resultados obtenidos para los diferentes tamaños de muestra en cuanto a la normalidad. Utilice pruebas de bondad y ajuste (shapiro wilks :shspiro.test()) y métodos gráficos (grafico de normalidad: qqnorm()). Comente ensu informe los resultados obtenidos.
+### Metodología Punto D
 
-```{r fig.height=5}
+Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con multiles tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada, y se colocan en un data frame.
 
+Se crea la función `medidas_resumen_multiple`, que toma un data frame y muestra en forma de tabla medidas de resumen y tests de normalidad de una columna seleccionada agupados por otra columna seleccionada.
+
+Se crea la función `gg_qq_plot`, que toma un data frame y realiza graficos de normalidad tipo `qqnor` de una columna seleccionada, agrupados por otra columna seleccionada.
+
+Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` para su analisis.
+
+[Ir a código sección d](#código-d)
+
+### Resultado D
+
+```{r seccion-d, fig.height=5, paged.print=TRUE, echo = FALSE}
+
+# Reproducibilidad
 set.seed(4321)
 
+# Creación de 500 estimadores, para multiples n de muestras de plantas_enfermas_50
 muesta_repetida_multiple_50 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
                                     ~ tibble(
                                         p_hat = rep_sample_prop(plantas_enfermas_50, 
                                                                 ., 500),
                                         n = as_factor(.)))
 
-muesta_repetida_multiple_50 %>% 
-    group_by(n) %>% 
-    summarise(mean = mean(p_hat), median = median(p_hat), sd = sd(p_hat),
-              `Shapiro test P-Value` = shapiro.test(p_hat)$p.value, 
-              `Anderson-Darling test P-Value` = ad.test(p_hat)$p.value) %>% 
+# Función para crear tabla con medidas de resumen sobre un data frame, para una
+# columna agrupada por otra columna
+medidas_resumen_multiple <- function(df, value, group){
+  value <- enquo(value)
+  group <- enquo(group)
+  df %>% 
+    group_by(!!group) %>% 
+    summarise(mean = mean(!!value), median = median(!!value), 
+              sd = sd(!!value),
+              `Shapiro-Wilk test P-Value` = shapiro.test(!!value)$p.value) %>% 
     ungroup() %>% 
     mutate(across(where(is.numeric), ~ round(.,4))) %>% 
     kable()
+}
 
-ggplot(muesta_repetida_multiple_50,  aes(sample = p_hat)) +
+# Función para crear grafico de qqplot sobre un data frame, para una columna 
+# agrupada por otra columna
+gg_qq_plot <- function(df, value, group, title, subtitle){
+  ggplot(df,  aes(sample = {{value}})) +
     stat_qq_band(alpha = 0.5) +
     stat_qq_line(linewidth = 0.1) +
     stat_qq_point(alpha = 0.5, size = 0) +
-    facet_wrap(vars( factor(str_c("n = ",n), 
+    facet_wrap(vars(factor(str_c("n = ",{{group}}), 
                             levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
                                                       100, 200, 500))))), 
                nrow =  4, scales = "free") +
     theme_tq() +
     theme(panel.spacing = unit(0, "lines"),
-          text = element_text(size = 8))
+          text = element_text(size = 8)) +
+    ggtitle(label = title, 
+            subtitle = subtitle)
+}
+
+
+# Creación de tabla de resumen y qqplots sobre las 500 rerpeticiones con muestra
+# n multiples, sobre la población simulada
+medidas_resumen_multiple(muesta_repetida_multiple_50, p_hat, n)
+gg_qq_plot(muesta_repetida_multiple_50, p_hat, n,
+           "qqplot del estimador para 500 repeticiones con n multiples",
+           "50% plantas enfermas")
 
 ```
 
+Podemos ver que a medida que aumentan los tamaños de muestas el promedio y mediana de los estimadores se aproximan cada vez más a la proporción real de la población, igualmente la desviación estardar disminuye. Así mismo se observa en las graficas de qqnorm que a mayor n, la distribución de los estimadores se parece más a una distrivución normal lo cual se comprueba con el test de Shapiro-Wilk el cual es positivo para normalidad a partir de n = 200.
 
-### e. Repita toda la simulación (puntos a – d), pero ahora para lotes con 10% de plantas enfermas y de nuevo para lotes con un 90% de plantas enfermas. Concluya sobre los resultados del ejercicio.
+Podemos entonces decir que estas simulaciones demuestran el teorema del limite central, ya que la distribución de la media de nuestras muestras aleatorias de plantas enfermas se aproxima a una distribución normal cuando el tamaño de la muestra es suficientemente grande.
 
+----
+
+### e. Repita toda la simulación (puntos a -- d), pero ahora para lotes con 10% de plantas enfermas y de nuevo para lotes con un 90% de plantas enfermas. Concluya sobre los resultados del ejercicio.
 
 ```{r fig.height=2.5}
 plantas_enfermas_10 <- sim_plantas_enfermas(1000, 0.1)
@@ -384,23 +431,36 @@ ggplot(muesta_repetida_multiple_90,  aes(sample = p_hat)) +
           text = element_text(size = 8))
 ```
 
-
 ### Código Librerias
 
 ```{r librerias-ref, eval=FALSE, include=TRUE, ref.label=c('librerias')}
 ```
 
-### Código A
+### Código A {#código-a}
+
 [Volver a metodología sección a](#metodología-punto-a)
+
 ```{r seccion-a-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-a')}
 ```
 
-### Código B
+### Código B {#código-b}
+
 [Volver a metodología sección b](#metodología-punto-b)
+
 ```{r seccion-b-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-b')}
 ```
 
-### Código C
+### Código C {#código-c}
+
 [Volver a metodología sección c](#metodología-punto-c)
+
 ```{r seccion-c-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-c')}
 ```
+
+### Código D {#código-d}
+
+[Volver a metodología sección d](#metodología-punto-d)
+
+```{r seccion-d-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-d')}
+```
+
