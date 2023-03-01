@@ -1,87 +1,172 @@
 ---
-title: "Problema1  -  Teorema del Límite Central"
+title: "Problema 1  -  Teorema del Límite Central"
 author: "Carlos Sierra Guzman, Camilo Vega Rámirez"
 date: "2023-02-27"
-output: pdf_document
+output: 
+    pdf_document:
+        toc: true
+        toc_depth: 3
+toc-title: "Contenido"
+linkcolor: blue
 ---
+
+<style>
+body {
+text-align: justify;
+}
+</style>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+#Función para hacer referencia a los chunks
+chunkref <- local({
+  function(chunklabel) {
+    sprintf('[%s](#%s)', chunklabel, chunklabel )
+  }  
+})
+
 ```
 
-```{r message=FALSE, warning=FALSE, include=TRUE, paged.print=FALSE}
-library(tidyverse)
-library(knitr)
-library(ggdist)
-library(tidyquant)
-library(nortest)
-library(qqplotr)
+## Introducción
+
+El presente documento es la respuesta al problema 1 de la Unidad 2 del curso Métodos y Simulación Estidística.
+
+Cada seccion esta compuesta por el puto a resolver, metodologia y resultado. 
+
+Al final del documuento se encuentra como anexos los códigos usados para la creación de las metodologias de las secciones, y se cuentan con links en el cuerpo del documento para navegar a travez del mismo.
+
+```{r librerias, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(tidyverse)      # Transformación de datos
+library(knitr)          # Renderizar tablas
+library(ggdist)         # Expanción de graficas de ggplot
+library(tidyquant)      # Tema de graficas de ggplot
+library(nortest)        # Pruebas de normalidad
+library(rapportools)    # Pruebas de normalidad
+library(qqplotr)        # QQplot usando ggplot
 ```
 
+### Problema 1
 
-# Teorema del Límite Central
-
-
-El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la proporción muestral a la distribución normal. Algunos autores afirman que esta aproximación es bastante buena a partir del umbral n>30.
-
-A continuación se describen los siguientes pasos para su verificación:
-
-### a. Realice una simulación en la cual genere una población de N=1000 (Lote), donde el porcentaje de individuos (supongamos plantas) enfermas sea del 50%.
+> *Teorema del Límite Central*
 
 
-```{r paged.print=TRUE}
+> *El Teorema del Límite Central es uno de los más importantes en la inferencia estadística y habla sobre la convergencia de los estimadores como la proporción muestral a la distribución normal. Algunos autores afirman que esta aproximación es bastante buena a partir del umbral n>30.*
 
+> *A continuación se describen los siguientes pasos para su verificación:*
+
+----
+
+## Sección A
+
+### Punto A a Resolver
+
+>*a. Realice una simulación en la cual genere una población de N=1000 (Lote), donde el porcentaje de individuos (supongamos plantas) enfermas sea del 50%.*
+
+
+### Metodología Punto A
+
+Se crea la función `sim_plantas_enfermas` para simular la una proporción de plantas enfermas dada una población.
+
+Se genera la simulación de N = 1000 con 50% de plantas enfermas y se genera tabla para comprobar que las cantidades sean las correctas.
+
+[Ir a código sección a](#código-a)
+
+### Resultado A
+
+```{r seccion-a, paged.print=TRUE, echo = FALSE}
+# Función para generar población n, con una propoporción prop de plantas enfermas
 sim_plantas_enfermas <- function(n, prop){
     p <- round(n*prop)
     q <- n-p
     c(rep(TRUE,p), rep(FALSE,q))
 }
 
+# Simulando para N = 100 y 0.5 de plantas enfermas
 plantas_enfermas_50 <- sim_plantas_enfermas(1000, 0.5)
 
+# Tabla para visualizar simulación
 table(plantas_enfermas_50) %>% 
     as_tibble() %>% 
     kable()
 ```
 
+----
 
-### b. Genere una función que permita:
+## Sección B
 
-* Obtener una muestra aleatoria de la población y
-* Calcule el estimador de la proporción muestral $\hat{p}$ para un tamaño de muestra dado n.
+### Punto B a Resolver
 
-```{r}
+> *b. Genere una función que permita: Obtener una muestra aleatoria de la población y Calcule el estimador de la proporción muestral $\hat{p}$ para un tamaño de muestra dado n.*
 
+### Metodología Punto B
+
+Se crea la función `sample_prop` para extraer `n` muestras de un vector `x`.
+
+Se verifica el funcionamiento de la función para un `n = 500` sobre la población simulada. 
+
+[Ir a código sección b](#código-b)
+
+### Resultado B
+
+```{r seccion-b, paged.print=TRUE, echo = FALSE}
+
+# Función para tomar una muestra de tamaño n de un vector x
 sample_prop <- function(x, n){
     sample(x, n) %>% 
         sum()/n
 }
 
+# Reproducibilidad
 set.seed(4321)
 
-sample_prop(plantas_enfermas_50,500)
+# Test de función con n = 500, sobre el vector plantas_enfermas_50
+str_c("Estimador de prueba = ",
+sample_prop(plantas_enfermas_50,500))
 
 ```
 
-### c. Repita el escenario anterior (b) n=500 veces y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador $\hat{p}$. ¿Qué tan simétricos o sesgados son los resultados obtenidos? y ¿qué se puede observar en cuanto a la variabilidad?. Realice en su informe un comentario sobre los resultados obtenidos.
+----
 
-```{r fig.height=2.5}
+## Sección C
+
+### Metodología Punto C
+
+> *c. Repita el escenario anterior (b) n=500 veces y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador $\hat{p}$. ¿Qué tan simétricos o sesgados son los resultados obtenidos? y ¿qué se puede observar en cuanto a la variabilidad?. Realice en su informe un comentario sobre los resultados obtenidos.*
+
+### Metodología Punto C
+
+Se crea la función `rep_sample_prop` que nos permite repetir la función `sample_prop` un numero `rep` de veces.
+
+Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada.
+
+Se crea la función `gg_rain_cloud`, que toma un vector y genera un grafico de rain cloud.
+
+Se crea la función `medidas_resumen`, que toma un vector y muestra en forma de tabla medidas de resumen respecto a simetria, sesgo y variabilidad.
+
+Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones para su analisis.
+
+
+[Ir a código sección c](#código-c)
+
+### Resultado C
+
+```{r seccion-c, fig.height=2.5, paged.print=TRUE, echo = FALSE}
+
+# Función para repetir la función sample_prop un rep número de veces
 rep_sample_prop <- function(x, n, rep){
     map_dbl(1:rep, ~ sample_prop(x,n))
 }
 
+# Reproducibilidad
 set.seed(4321)
 
+# Creación de 500 estimadores, para un n = 500 de muestras de plantas_enfermas_50
 muesta_repetida_50 <-  rep_sample_prop(plantas_enfermas_50,500, 500)
 
-muesta_repetida_50 %>% 
-    as_tibble() %>% 
-    summarise(mean = mean(value), median = median(value), sd = sd(value)) %>% 
-    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
-    kable()
-
-
-ggplot(muesta_repetida_50 %>% as_tibble() , aes( y = value)) +
+# Función para crear grafico de rain cloud sobre un vector
+gg_rain_cloud <- function(x, title){
+    ggplot(x %>% as_tibble() , aes( y = value)) +
     stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA,
                  fill = "#1F78B4") +
     geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5, fill = "#1F78B4") +
@@ -89,11 +174,39 @@ ggplot(muesta_repetida_50 %>% as_tibble() , aes( y = value)) +
     coord_flip() +
     theme_tq() +
     scale_fill_tq(theme = "light") +
-    theme(axis.text.y = element_blank()) +
+    theme(axis.text.y = element_blank(),
+          text = element_text(size = 8)) +
     xlab("") +
-    ylab(expression(hat("p")))
+    ylab(expression(hat("p"))) +
+    ggtitle(label = title)
+}
+
+# Función para crear tabla con medidas de resumen sobre un vector
+medidas_resumen <-  function(x){
+    x %>% 
+    as_tibble() %>% 
+    summarise(mean = mean(value), median = median(value), sd = sd(value),
+              min = min(value), max = max(value),
+              skewness = skewness(value), kurtosis= kurtosis(value))  %>% 
+    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
+    kable()
+}
+
+# Creación rain cloud y tabla de resumen sobre las 500 rerpeticiones con muestra
+# n = 500, sobre la población simulada
+gg_rain_cloud(
+    muesta_repetida_50, 
+    "Distribución estimador para 500 repeticiones con n = 500"
+    ); medidas_resumen(muesta_repetida_50)
 
 ```
+
+Con un tamaño de muestra n = 500 y 500 repeticiones, se observa que los estimadores presentan indicadores de skewness y kurtosis, bajos, que sumados a la grafica nos muestran que los datos pueden considerarse simetricos, igualmente tanto la mediana como el promedio del estimador se aproximan al valor real de la proporcion de la población que es de 50% lo que nos indica que la distribución de los estimadores es in-sesgadas, por último la desviación estandar de los estimadores es del 1.60%, con un rango que oscila aproximadamente dentro del $\pm$ 5%.
+
+Todo lo anterior nos muestra que con un tamaño de muestra de n = 500 la distribución de los estimadores se asemeja a una distribución normal y muestran una buena aproximación a la proporción real de la población.
+
+----
+
 
 ### d. Repita los puntos b y c para tamaños de muestra n=5, 10, 15, 20, 30, 50, 60, 100, 200, 500. Compare los resultados obtenidos para los diferentes tamaños de muestra en cuanto a la normalidad. Utilice pruebas de bondad y ajuste (shapiro wilks :shspiro.test()) y métodos gráficos (grafico de normalidad: qqnorm()). Comente ensu informe los resultados obtenidos.
 
@@ -151,7 +264,9 @@ muesta_repetida_10 <-  rep_sample_prop(plantas_enfermas_10,500, 500)
 
 muesta_repetida_10 %>% 
     as_tibble() %>% 
-    summarise(mean = mean(value), median = median(value), sd = sd(value)) %>% 
+    summarise(mean = mean(value), median = median(value), sd = sd(value),
+              min = min(value), max = max(value),
+              skewness = skewness(value)) %>% 
     mutate(across(where(is.numeric), ~ round(.,4))) %>% 
     kable()
 
@@ -218,7 +333,9 @@ muesta_repetida_90 <-  rep_sample_prop(plantas_enfermas_90, 500, 500)
 
 muesta_repetida_90 %>% 
     as_tibble() %>% 
-    summarise(mean = mean(value), median = median(value), sd = sd(value)) %>% 
+    summarise(mean = mean(value), median = median(value), sd = sd(value),
+              min = min(value), max = max(value),
+              skewness = skewness(value)) %>% 
     mutate(across(where(is.numeric), ~ round(.,4))) %>% 
     kable()
 
@@ -267,3 +384,23 @@ ggplot(muesta_repetida_multiple_90,  aes(sample = p_hat)) +
           text = element_text(size = 8))
 ```
 
+
+### Código Librerias
+
+```{r librerias-ref, eval=FALSE, include=TRUE, ref.label=c('librerias')}
+```
+
+### Código A
+[Volver a metodología sección a](#metodología-punto-a)
+```{r seccion-a-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-a')}
+```
+
+### Código B
+[Volver a metodología sección b](#metodología-punto-b)
+```{r seccion-b-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-b')}
+```
+
+### Código C
+[Volver a metodología sección c](#metodología-punto-c)
+```{r seccion-c-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-c')}
+```
