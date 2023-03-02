@@ -1,7 +1,6 @@
 ---
 title: "Problema 1  -  Teorema del Límite Central"
 author: "Carlos Sierra Guzman, Camilo Vega Rámirez"
-date: "2023-02-27"
 output: 
     pdf_document:
         toc: true
@@ -19,14 +18,6 @@ text-align: justify;
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
-#Función para hacer referencia a los chunks
-chunkref <- local({
-  function(chunklabel) {
-    sprintf('[%s](#%s)', chunklabel, chunklabel )
-  }  
-})
-
 ```
 
 ----
@@ -60,9 +51,7 @@ library(qqplotr)        # QQplot usando ggplot
 
 ------------------------------------------------------------------------
 
-## Sección A
-
-### Punto A a Resolver
+## Punto A
 
 > *a. Realice una simulación en la cual genere una población de N=1000 (Lote), donde el porcentaje de individuos (supongamos plantas) enfermas sea del 50%.*
 
@@ -84,7 +73,7 @@ sim_plantas_enfermas <- function(n, prop){
     c(rep(TRUE,p), rep(FALSE,q))
 }
 
-# Simulando para N = 100 y 0.5 de plantas enfermas
+# Simulando para N = 1000 y 0.5 de plantas enfermas
 plantas_enfermas_50 <- sim_plantas_enfermas(1000, 0.5)
 
 # Tabla para visualizar simulación
@@ -95,15 +84,13 @@ table(plantas_enfermas_50) %>%
 
 ------------------------------------------------------------------------
 
-## Sección B
-
-### Punto B a Resolver
+## Punto B
 
 > *b. Genere una función que permita: Obtener una muestra aleatoria de la población y Calcule el estimador de la proporción muestral* $\hat{p}$ para un tamaño de muestra dado n.
 
 ### Metodología Punto B {#metodología-punto-b}
 
-Se crea la función `sample_prop` para extraer `n` muestras de un vector `x`.
+Se crea la función `sample_prop` para extraer `n` muestras de un vector `x` y calcular el estimador de la proporción muestral.
 
 Se verifica el funcionamiento de la función para un `n = 500` sobre la población simulada.
 
@@ -113,7 +100,8 @@ Se verifica el funcionamiento de la función para un `n = 500` sobre la poblaci�
 
 ```{r seccion-b, paged.print=TRUE, echo = FALSE}
 
-# Función para tomar una muestra de tamaño n de un vector x
+# Función para tomar una muestra de tamaño n de un vector x y calcular la
+# proporcion del estimador.
 sample_prop <- function(x, n){
     sample(x, n) %>% 
         sum()/n
@@ -130,11 +118,9 @@ sample_prop(plantas_enfermas_50,500))
 
 ------------------------------------------------------------------------
 
-## Sección C
+## Punto C
 
-### Punto C a Resolver
-
-> *c. Repita el escenario anterior (b) n=500 veces y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador* $\hat{p}$. ¿Qué tan simétricos o sesgados son los resultados obtenidos? y ¿qué se puede observar en cuanto a la variabilidad?. Realice en su informe un comentario sobre los resultados obtenidos.
+> *c. Repita el escenario anterior (b) n=500 veces y analice los resultados en cuanto al comportamiento de los 500 resultados del estimador $\hat{p}$. ¿Qué tan simétricos o sesgados son los resultados obtenidos? y ¿qué se puede observar en cuanto a la variabilidad?. Realice en su informe un comentario sobre los resultados obtenidos.*
 
 ### Metodología Punto C
 
@@ -210,9 +196,7 @@ Todo lo anterior nos muestra que con un tamaño de muestra de n = 500 la distrib
 
 ------------------------------------------------------------------------
 
-## Sección D
-
-### Punto D a Resolver
+## Punto D
 
 > *d. Repita los puntos b y c para tamaños de muestra n=5, 10, 15, 20, 30, 50, 60, 100, 200, 500. Compare los resultados obtenidos para los diferentes tamaños de muestra en cuanto a la normalidad. Utilice pruebas de bondad y ajuste (shapiro wilks :shspiro.test()) y métodos gráficos (grafico de normalidad: qqnorm()). Comente ensu informe los resultados obtenidos.*
 
@@ -292,175 +276,212 @@ Podemos entonces decir que estas simulaciones demuestran el teorema del limite c
 
 ----
 
-### e. Repita toda la simulación (puntos a -- d), pero ahora para lotes con 10% de plantas enfermas y de nuevo para lotes con un 90% de plantas enfermas. Concluya sobre los resultados del ejercicio.
+## Punto E
 
-```{r fig.height=2.5}
+> *e. Repita toda la simulación (puntos a -- d), pero ahora para lotes con 10% de plantas enfermas y de nuevo para lotes con un 90% de plantas enfermas. Concluya sobre los resultados del ejercicio.*
+
+### Metodología Punto E (10%) {#metodología-punto-e-10}
+
+Se genera la simulación de N = 1000 con 10% de plantas enfermas y se genera tabla para comprobar que las cantidades sean las correctas.
+
+Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada para 10% de plantas enfermas.
+
+Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de plantas enfermas al 10% para su analisis.
+
+Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con multiles tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada con plantas enfermas al 10%, y se colocan en un data frame.
+
+Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` sobre la población simulada con plantas enfermas al 10% para su analisis, 
+
+[Ir a código sección e](#código-e-10)
+
+### Resultado E (10%)
+
+```{r seccion-e-1, fig.height=2.5, paged.print=TRUE, echo = FALSE}
+
+# Simulando para N = 100 y 0.1 de plantas enfermas
 plantas_enfermas_10 <- sim_plantas_enfermas(1000, 0.1)
 
+# Tabla para visualizar simulación
 table(plantas_enfermas_10) %>% 
     as_tibble() %>% 
     kable()
 
-# set.seed(1234)
-# 
-# sample_prop(plantas_enfermas_10,500)
-
+# Reproducibilidad
 set.seed(1234)
 
+# Creación de 500 estimadores, para un n = 500 de muestras de plantas_enfermas_10
 muesta_repetida_10 <-  rep_sample_prop(plantas_enfermas_10,500, 500)
 
-muesta_repetida_10 %>% 
-    as_tibble() %>% 
-    summarise(mean = mean(value), median = median(value), sd = sd(value),
-              min = min(value), max = max(value),
-              skewness = skewness(value)) %>% 
-    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
-    kable()
-
-
-ggplot(muesta_repetida_10 %>% as_tibble() , aes( y = value)) +
-    stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA,
-                 fill = "#1F78B4") +
-    geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5, fill = "#1F78B4") +
-    stat_dots(side = "left", justification = 1.1, fill = "#1F78B4") +
-    coord_flip() +
-    theme_tq() +
-    scale_fill_tq(theme = "light") +
-    theme(axis.text.y = element_blank()) +
-    xlab("") +
-    ylab(expression(hat("p")))
+# Creación rain cloud y tabla de resumen sobre las 500 rerpeticiones con muestra
+# n = 500, sobre la población simulada al 10% de plantas enfermas
+gg_rain_cloud(
+muesta_repetida_10,
+"Distribución estimador para 500 repeticiones con n = 500",
+"10% plantas enfermas")
+medidas_resumen(muesta_repetida_10)
 ```
 
-```{r fig.height=5}
+Con una proporción de plantas enfermas del 10%, se observa que los estimadores presentan indicadores de skewness y kurtosis, bajos, que sumados a la grafica nos muestran que los datos pueden considerarse simetricos, igualmente tanto la mediana como el promedio del estimador se aproximan al valor real de la proporcion de la población que es de 10% lo que nos indica que la distribución de los estimadores es in-sesgadas, así mismo la desviación estandar de los estimadores es del 0.91%, con un rango que oscila aproximadamente dentro del $\pm$ 2%.
+
+Todo lo anterior nos muestra que con un tamaño de muestra de n = 500 la distribución de los estimadores, de la simulación con plantas enfermas al 10% se asemeja a una distribución normal y muestran una buena aproximación a la proporción real de la población.
+
+Comparado con la simulación de plantas enfermas al 50% se nota que la simulación con plantas enfermas al 10% presenta una distibución más aplanada, pero con una variabilidad menor.
+
+```{r seccion-e-2, fig.height=5, paged.print=TRUE, echo = FALSE}
+# Reproducibilidad
 set.seed(1234)
 
+# Creación de 500 estimadores, para multiples n de muestras de plantas_enfermas_10
 muesta_repetida_multiple_10 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
                                     ~ tibble(
                                         p_hat = rep_sample_prop(plantas_enfermas_10, 
                                                                 ., 500),
                                         n = as_factor(.)))
 
-muesta_repetida_multiple_10 %>% 
-    group_by(n) %>% 
-    summarise(mean = mean(p_hat), median = median(p_hat), sd = sd(p_hat),
-              `Shapiro test P-Value` = shapiro.test(p_hat)$p.value, 
-              `Anderson-Darling test P-Value` = ad.test(p_hat)$p.value) %>% 
-    ungroup() %>% 
-    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
-    kable()
-
-ggplot(muesta_repetida_multiple_10,  aes(sample = p_hat)) +
-    stat_qq_band(alpha = 0.5) +
-    stat_qq_line(linewidth = 0.1) +
-    stat_qq_point(alpha = 0.5, size = 0) +
-    facet_wrap(vars( factor(str_c("n = ",n), 
-                            levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
-                                                      100, 200, 500))))), 
-               nrow =  4, scales = "free") +
-    theme_tq() +
-    theme(panel.spacing = unit(0, "lines"),
-          text = element_text(size = 8))
+# Creación de tabla de resumen y qqplots sobre las 500 rerpeticiones con muestra
+# n multiples, sobre la población simulada al 10% de plantas enfermas
+medidas_resumen_multiple(muesta_repetida_multiple_10, p_hat, n)
+gg_qq_plot(muesta_repetida_multiple_10, p_hat, n,
+"qqplot del estimador para 500 repeticiones con n multiples",
+"10% plantas enfermas")
 
 ```
 
-```{r fig.height=2.5}
+Para la simulación con plantas enfermas al 10%, podemos ver que a medida que aumentan los tamaños de muestas el promedio y mediana de los estimadores se aproximan cada vez más a la proporción real de la población, igualmente la desviación estardar disminuye. Así mismo se observa en las graficas de qqnorm que para las muestras de tamaño n = a 50 a n = 60, las distribuaciones suelen tener mayor peso hacia los porcentajes menores a 10% por lo cual no se alcanza la normalidad, este fenomeno desaparece al llegar a n = 100 donde la distribución de los estimadores se parece más a una distribución normal, se ve que solo n = 500 logra pasar el test de Shapiro-Wilk para normalidad.
+
+Podemos entonces decir que estas simulaciones demuestran el teorema del limite central, ya que la distribución de la media de las muestras aleatorias de plantas enfermas al 10% se aproxima a una distribución normal cuando el tamaño de la muestra es grande, con la anitación que para esta simulación en particular fue necesario un 50% de muestras de la población para alcanzar la normalidad mediante un test estadistico, graficamente podemos decir que se aproxima a partir de n = 100.
+
+### Metodología Punto E (90%) {#metodología-punto-e-90}
+
+Se genera la simulación de N = 1000 con 90% de plantas enfermas y se genera tabla para comprobar que las cantidades sean las correctas.
+
+Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada para 90% de plantas enfermas.
+
+Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de plantas enfermas al 90% para su analisis.
+
+Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con multiles tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada con plantas enfermas al 90%, y se colocan en un data frame.
+
+Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` sobre la población simulada con plantas enfermas al 90% para su analisis, 
+
+[Ir a código sección e](#código-e-90)
+
+### Resultado E (90%)
+
+```{r seccion-e-3, fig.height=2.5, paged.print=TRUE, echo = FALSE}
+
+# Simulando para N = 100 y 0.9 de plantas enfermas
 plantas_enfermas_90 <- sim_plantas_enfermas(1000, 0.9)
 
+# Tabla para visualizar simulación
 table(plantas_enfermas_90) %>% 
     as_tibble() %>% 
     kable()
 
-# set.seed(1234)
-# 
-# sample_prop(plantas_enfermas_90,500)
-
+# Reproducibilidad
 set.seed(1234)
 
-muesta_repetida_90 <-  rep_sample_prop(plantas_enfermas_90, 500, 500)
+# Creación de 500 estimadores, para un n = 500 de muestras de plantas_enfermas_90
+muesta_repetida_90 <-  rep_sample_prop(plantas_enfermas_90,500, 500)
 
-muesta_repetida_90 %>% 
-    as_tibble() %>% 
-    summarise(mean = mean(value), median = median(value), sd = sd(value),
-              min = min(value), max = max(value),
-              skewness = skewness(value)) %>% 
-    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
-    kable()
-
-
-ggplot(muesta_repetida_90 %>% as_tibble() , aes( y = value)) +
-    stat_halfeye(adjust = 0.5, justification = -0.2, .width = 0, point_colour = NA,
-                 fill = "#1F78B4") +
-    geom_boxplot(width = 0.12, outlier.color = NA, alpha = 0.5, fill = "#1F78B4") +
-    stat_dots(side = "left", justification = 1.1, fill = "#1F78B4") +
-    coord_flip() +
-    theme_tq() +
-    scale_fill_tq(theme = "light") +
-    theme(axis.text.y = element_blank()) +
-    xlab("") +
-    ylab(expression(hat("p")))
+# Creación rain cloud y tabla de resumen sobre las 500 rerpeticiones con muestra
+# n = 500, sobre la población simulada al 90% de plantas enfermas
+gg_rain_cloud(
+muesta_repetida_90,
+"Distribución estimador para 500 repeticiones con n = 500",
+"90% plantas enfermas")
+medidas_resumen(muesta_repetida_90)
 ```
 
-```{r fig.height=5}
+Con una proporción de plantas enfermas del 90% se nota un comportamiento similar al de plantas enfermas al 10% con kewness y kurtosis bajos, una grafica algo aplanada, mediana y media aproximadas a la proporción real de la poblacion (90%), baja desviación 0.92% y rango de aproximadamente $\pm$ 2%, en general datos que muestran una distribución in-sesgadas y baja variabilidad.
+
+Vemos que tambien con un tamaño de muestra de n = 500 la distribución de los estimadores, de la simulación con plantas enfermas, en esta ocación al 90%, se asemeja a una distribución normal y muestran una buena aproximación a la proporción real de la población.
+
+
+```{r seccion-e-4, fig.height=5, paged.print=TRUE, echo = FALSE}
+# Reproducibilidad
 set.seed(1234)
 
+# Creación de 500 estimadores, para multiples n de muestras de plantas_enfermas_90
 muesta_repetida_multiple_90 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
                                     ~ tibble(
                                         p_hat = rep_sample_prop(plantas_enfermas_90, 
                                                                 ., 500),
                                         n = as_factor(.)))
 
-muesta_repetida_multiple_90 %>% 
-    group_by(n) %>% 
-    summarise(mean = mean(p_hat), median = median(p_hat), sd = sd(p_hat),
-              `Shapiro test P-Value` = shapiro.test(p_hat)$p.value, 
-              `Anderson-Darling test P-Value` = ad.test(p_hat)$p.value) %>% 
-    ungroup() %>% 
-    mutate(across(where(is.numeric), ~ round(.,4))) %>% 
-    kable()
+# Creación de tabla de resumen y qqplots sobre las 500 rerpeticiones con muestra
+# n multiples, sobre la población simulada al 90% de plantas enfermas
+medidas_resumen_multiple(muesta_repetida_multiple_90, p_hat, n)
+gg_qq_plot(muesta_repetida_multiple_90, p_hat, n,
+"qqplot del estimador para 500 repeticiones con n multiples",
+"90% plantas enfermas")
 
-ggplot(muesta_repetida_multiple_90,  aes(sample = p_hat)) +
-    stat_qq_band(alpha = 0.5) +
-    stat_qq_line(linewidth = 0.1) +
-    stat_qq_point(alpha = 0.5, size = 0) +
-    facet_wrap(vars( factor(str_c("n = ",n), 
-                            levels = c(str_c("n = ",c(5, 10, 15, 20, 30, 50, 60,
-                                                      100, 200, 500))))), 
-               nrow =  4, scales = "free") +
-    theme_tq() +
-    theme(panel.spacing = unit(0, "lines"),
-          text = element_text(size = 8))
 ```
+ 
+Para la simulación con plantas enfermas al 90%, vemos igualmente que a medida que aumentan los tamaños de muestas el promedio y mediana de los estimadores se aproximan cada vez más a la proporción real de la población (para este caso 90%) e igualment su desviación estardar disminuye. Así mismo obsevamos en las graficas de qqnorm  para las muestras de tamaño n = a 50 a n = 60, las distribuaciones suelen tener mayor peso hacia los porcentajes mayores a 90% no encajando dentro de la normalidad, al llegar a n = 100 las graficas se asemejan más a la normalidad pero con algunos puntos por fuera en los 2 extremos, solo al llegar a n = 200 se ve claramente la normalidad y solo en n = 500 se logra pasar el test de Shapiro-Wilk con un p-value de 0.12.
+
+Podemos entonces decir que estas simulaciones demuestran una vez más el teorema del limite central, ya que la distribución de la media de las muestras aleatorias de plantas enfermas al 90% se aproxima a una distribución normal cuando el tamaño de la muestra es grande, sin embargo de los 3 porcentajes de plantas enfermas, se nota que que la simulación de plantas enfermas al 90% fue el que necesitó mayor tamño de muestra para acercarce a la normalidad.
+ 
+---- 
+
+## Conclusión
+
+Mediante los ejercicios realizados con simulaciones de proporciones de poblacones de plantas enfermas,  se pudo demostrar el teorema de limite central el cual dice que; *"bajo ciertas condiciones, la distribución de la media de una muestra aleatoria de una población se aproxima a una distribución normal cuando el tamaño de la muestra es suficientemente grande"*, viendo como a medida que aumentabamos el tamaño de muestra efectivamente las estimaciones de nuestras simulaciones tomaban formas cada vez más normales. 
+
+Obserbamos tambien que para las proporciones simuladas el umbral de normalidad se encontro muy por arriba de n\>30 llegando a ubicarse por arriba de n\>60 cuando la proporcion era del 50% y por arriba de n\>200 cuando la proporción se acerca la los extremos (10% y 90%), lo cual nos indica que, en el caso de las proporciones, se necesitan tamoños de muestras mayores para alcanzar niveles de normalidad. 
+
+---
+
+## Anexos
 
 ### Código Librerias
 
 ```{r librerias-ref, eval=FALSE, include=TRUE, ref.label=c('librerias')}
 ```
 
-### Código A {#código-a}
+### Código Punto A {#código-a}
 
 [Volver a metodología sección a](#metodología-punto-a)
 
 ```{r seccion-a-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-a')}
 ```
 
-### Código B {#código-b}
+### Código Punto B {#código-b}
 
 [Volver a metodología sección b](#metodología-punto-b)
 
 ```{r seccion-b-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-b')}
 ```
 
-### Código C {#código-c}
+### Código Punto C {#código-c}
 
 [Volver a metodología sección c](#metodología-punto-c)
 
 ```{r seccion-c-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-c')}
 ```
 
-### Código D {#código-d}
+### Código Punto D {#código-d}
 
 [Volver a metodología sección d](#metodología-punto-d)
 
 ```{r seccion-d-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-d')}
 ```
 
+### Código Punto E (10%) {#código-e-10}
+
+[Volver a metodología sección e](#metodología-punto-e-10)
+
+```{r seccion-e-1-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-e-1')}
+```
+
+```{r seccion-e-2-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-e-2')}
+```
+
+### Código Punto E (90%) {#código-e-90}
+
+[Volver a metodología sección e](#metodología-punto-e-90)
+
+```{r seccion-e-3-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-e-3')}
+```
+
+```{r seccion-e-4-ref, eval=FALSE, include=TRUE, ref.label=c('seccion-e-4')}
+```
