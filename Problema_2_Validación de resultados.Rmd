@@ -23,23 +23,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introducción
 
-El presente documento es la respuesta al problema 2 de la Unidad 2 del curso Métodos y Simulación Estidística.
+Este documento tiene como propósito ofrecer la solución al problema 2 de la Unidad 2 del curso Métodos y Simulación Estadística. Cada sección aborda un punto específico que se debe resolver, y se presenta la metodología utilizada y los resultados obtenidos. 
 
-Cada seccion esta compuesta por el puto a resolver, metodologia y resultado.
+Adicionalmente, al final del documento se incluyen anexos con los códigos utilizados en la elaboración de las metodologías para cada sección. Esto permitirá al lector revisar con detalle cada paso del proceso seguido para llegar a las conclusiones presentadas en el documento. Para facilitar la navegación, el documento cuenta con enlaces que permiten acceder a cada uno de los códigos desde la correspondiente sección.
 
-Al final del documuento se encuentra como anexos los códigos usados para la creación de las metodologias de las secciones, y se cuentan con links en el cuerpo del documento para navegar a travez del mismo.
 
 
 ```{r librerias, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 library(tidyverse)      # Transformación de datos
 library(normtest)       # Pruebas de normalidad
 library(knitr)          # Renderizar tablas
-library(ggdist)         # Expanción de graficas de ggplot
+library(ggdist)         # Expansión de graficas de ggplot
 library(tidyquant)      # Tema de graficas de ggplot
 library(nortest)        # Pruebas de normalidad
 library(rapportools)    # Pruebas de normalidad
 library(qqplotr)        # QQplot usando ggplot
-options(scipen = 999)   # Anulación de notación cientifica 
+options(scipen = 999)   # Anulación de notación científica 
 ```
 
 ### Problema 2 
@@ -61,14 +60,16 @@ y p2 - proporciones poblacionales).*
 
 Se crea la función `sim_plantas_enfermas` para simular la una proporción de plantas enfermas dada una población.
 
-Se generan simulacines de N = 1000 con 10% de plantas enfermas y N = 1500 con 10% de plantas enfermas. Se genera tabla para comprobar que las cantidades sean las correctas.
+Se generan simulaciones de N = 1000 con 10% de plantas enfermas y N = 1500 con 10% de plantas enfermas. 
+
+Se crea tabla para comprobar que las cantidades sean las correctas.
 
 [Ir a código sección a](#código-a)
 
 ### Resultado A
 
 ```{r seccion-a, paged.print=TRUE, echo = FALSE}
-# Función para generar población n, con una propoporción prop de plantas enfermas
+# Función para generar población n, con una proporción prop de plantas enfermas
 sim_plantas_enfermas <- function(n, prop){
     p <- round(n*prop)
     q <- n-p
@@ -105,9 +106,9 @@ bind_rows(grupo1, grupo2) %>%
 
 ### Metodología Punto B {#metodología-punto-b}
 
-Se crea la función `sample_prop_multi` para extraer `n` muestras de dos vector `x` y  `y`, luego cacular por separado sus estimadores de proporción muestral y finalmente restar al estimador de `x` el estimador de `y`.
+Se crea la función `sample_prop_multi` para extraer `n` muestras de los vectores `x` y  `y`, luego calcular por separado sus estimadores de proporción muestral y finalmente resta al estimador de `x` el estimador de `y`.
 
-Se verifica el funcionamiento de la función para un `n = 500` sobre las poblacions simuladas.
+Se verifica el funcionamiento de la función para un `n = 500` sobre las poblaciones simuladas.
 
 [Ir a código sección b](#código-b)
 
@@ -115,7 +116,7 @@ Se verifica el funcionamiento de la función para un `n = 500` sobre las poblaci
 
 ```{r seccion-b, paged.print=TRUE, echo = FALSE}
 # Función para tomar una muestra de tamaño n para los vectores x,y  calcular la
-# proporcion del estimador para cada uno y restal al estimadoe de x el estimador
+# proporción del estimador para cada uno y restar al estimador  de x el estimador
 # de y
 sample_prop_multi <- function(x, y, n){
     x_sample <- sample(x, n) %>% 
@@ -143,15 +144,15 @@ sample_prop_multi(plantas_enfermas_10_1, plantas_enfermas_10_2,500))
 
 ### Metodología Punto C
 
-Se crea la función `rep_sample_prop_multi` que nos permite repetir la función `sample_prop_multi` un numero `rep` de veces.
+Se crea la función `rep_sample_prop_multi` que nos permite repetir la función `sample_prop_multi` un número `rep` de veces.
 
-Se realiza la simulación de 500 veces las diferencia de los estimadores con muestras de `n = 500` sobre las poblaciónes simuladas.
+Se realiza la simulación de 500 veces las diferencia de los estimadores con muestras de `n = 500` sobre las poblaciones simuladas.
 
-Se crea la función `gg_rain_cloud`, que toma un vector y genera un grafico de rain cloud.
+Se crea la función `gg_rain_cloud`, que toma un vector y genera un gráfico de rain cloud.
 
-Se crea la función `medidas_resumen`, que toma un vector y muestra en forma de tabla medidas de resumen respecto a simetria, sesgo y variabilidad.
+Se crea la función `medidas_resumen`, que toma un vector y muestra en forma de tabla medidas de resumen respecto a simetría, sesgo y variabilidad.
 
-Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de las diferencias en los estimadores para su analisis.
+Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de las diferencias en los estimadores para su análisis.
 
 [Ir a código sección c](#código-c)
 
@@ -168,7 +169,7 @@ rep_sample_prop_multi <- function(x, y, n, rep){
 # Reproducibilidad
 set.seed(4321)
 
-# Creación de 500  simulaciones de diferenciaas de estimadores, para un n = 500 
+# Creación de 500 simulaciones de diferencias de estimadores, para un n = 500 
 # de muestras de plantas_enfermas_10_1 y plantas_enfermas_10_2
 muesta_repetida_10_multi <-  rep_sample_prop_multi(plantas_enfermas_10_1, 
                                                    plantas_enfermas_10_2,500, 500)
@@ -202,7 +203,7 @@ medidas_resumen <-  function(x){
     kable()
 }
 
-# Creación rain cloud y tabla de resumen sobre las 500 rerpeticiones con muestra
+# Creación rain cloud y tabla de resumen sobre las 500 repeticiones con muestra
 # n = 500, sobre las diferencias de estimadores simuladas.
 gg_rain_cloud(
     muesta_repetida_10_multi, 
@@ -213,10 +214,9 @@ medidas_resumen(muesta_repetida_10_multi)
 
 ```
 
-Con un tamaño de muestra n = 500 y 500 repeticiones, se observa que las diferencias de los estimadores presentan indicadores de skewness y kurtosis, bajos, que sumados a la grafica nos muestran que los datos pueden considerarse simetricos, igualmente tanto la mediana como el promedio del estimador se aproximan a 0 lo que nos indica que la distribución de las diferencias de los estimadores es in-sesgadas.
+Para un tamaño de muestra de n = 500 y 500 repeticiones, se encontraron indicadores de skewness y kurtosis bajos en las diferencias de los estimadores. Además, al analizar la gráfica, se puede observar que los datos presentan una distribución simétrica. Tanto la mediana como el promedio del estimador se acercan a cero, lo que sugiere que la distribución de las diferencias de los estimadores es in sesgada.
 
-Vemos que las diferencias no siempre son 0 pero la tendencia media es que las diferencia se aproxima a ese valor, notando la presencia de alguns outlies con diferencias de $\pm$ 5%.
-
+Aunque las diferencias no siempre son cero, se observa que en general se aproximan a este valor. Sin embargo, se detectaron algunos outliers con diferencias del $\pm$ 5% 
 
 ----
 
@@ -226,13 +226,13 @@ Vemos que las diferencias no siempre son 0 pero la tendencia media es que las di
 
 ### Metodología Punto D
 
-Se realiza la simulación de 500 veces el calculo de las diferecias de los estmadores con multiles tamaños de muestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre las poblaciones simuladas, y se colocan en un data frame.
+Se realiza la simulación de 500 veces el cálculo de las diferencias de los estimadores con múltiples tamaños de muestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre las poblaciones simuladas, y se colocan en un data frame.
 
-Se crea la función `medidas_resumen_multiple`, que toma un data frame y muestra en forma de tabla medidas de resumen y tests de normalidad de una columna seleccionada agupados por otra columna seleccionada.
+Se crea la función `medidas_resumen_multiple`, que toma un data frame y muestra en forma de tabla medidas de resumen y test de normalidad de una columna seleccionada agrupados por otra columna seleccionada.
 
-Se crea la función `gg_qq_plot`, que toma un data frame y realiza graficos de normalidad tipo `qqnor` de una columna seleccionada, agrupados por otra columna seleccionada.
+Se crea la función `gg_qq_plot`, que toma un data frame y realiza gráficos de normalidad tipo `qqnorm` de una columna seleccionada, agrupados por otra columna seleccionada.
 
-Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones de diferencias de estimadores para distintos tamaños de nuestra `n` para su analisis.
+Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones de diferencias de estimadores para distintos tamaños de nuestra `n` para su análisis.
 
 [Ir a código sección d](#código-d)
 
@@ -243,7 +243,7 @@ Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 50
 # Reproducibilidad
 set.seed(4321)
 
-# Creación de 500 estimadores, para multiples n de muestras de plantas_enfermas_10_1
+# Creación de 500 estimadores, para múltiples n de muestras de plantas_enfermas_10_1
 # y plantas_enfermas_10_2
 muesta_repetida_multiple_10 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
                                     ~ tibble(
@@ -287,19 +287,20 @@ gg_qq_plot <- function(df, value, group, title, subtitle){
 }
 
 
-# Creación de tabla de resumen y qqplots sobre las 500 rerpeticiones con muestra
-# n multiples, sobre la población simulada
+# Creación de tabla de resumen y qqplots sobre las 500 repeticiones  con muestra
+# n múltiples, sobre la población simulada
 medidas_resumen_multiple(muesta_repetida_multiple_10, diff_p_hat, n)
 gg_qq_plot(muesta_repetida_multiple_10, diff_p_hat, n,
-           "qqplot de la diferencia de estimadores para 500 repeticiones con n multiples",
+           "qqplot de la diferencia de estimadores para 500 repeticiones con n múltiples",
            "N = 1000 y 10% plantas enfermas vs. N = 1500 y 10% plantas enfermas")
 
 ```
 
-Podemos ver que a medida que aumentan los tamaños de muestas el promedio de las diferencias de los estimadores se aproxima cada vez más a 0, sin embargo la reducción no es constante y preseta variaciones por arriba o abajo de este valor y e incluso en algunos casos aumenta como podemos ver en n = 200 donde su promedio esta (en valores absulutos) por arriba incluso de la diferencia de n = 60. Respecto a la desviación estardar esta disminuye cosntante mente a mediada que aumenta n. Así mismo se observa en las graficas de qqnorm que a mayor n, la distribución de las diferencias de los estimadores se parece más a una distrivución normal lo cual se comprueba con el test de Shapiro-Wilk el cual es positivo para normalidad a partir de n = 200.
+Se puede observar que a medida que aumentan los tamaños de muestra, el promedio de las diferencias de los estimadores se acerca cada vez más a cero. Sin embargo, esta reducción no es constante y presenta variaciones por encima o por debajo de este valor. Incluso, en algunos casos, el promedio aumenta, como se puede ver en n = 200, donde su promedio (en valores absolutos) está por encima de la diferencia de n = 60. Por otro lado, la desviación estándar disminuye constantemente a medida que aumenta n.
 
-Vemos que a mayor tamaño de muestra disminuye la probabilidad de concluir que hay diferencias entre la comparación de proporciones para los tratamientios, ya que los promedios se aproximan a 0, el pricipal factor para determinar esto son las desviaciones son cada vez menores pasando de un n = 5 cons desviaciones muy altas cercanas al 19% a desviaciones de solo 1.5% aproximadamente para n = 500.
+Además, se puede observar en las gráficas de qqnorm que a medida que aumenta n, la distribución de las diferencias de los estimadores se asemeja más a una distribución normal. Esto se confirma con el test de Shapiro-Wilk, el cual arroja resultados positivos para normalidad a partir de n = 200.
 
+Se observa que a medida que aumenta el tamaño de muestra, disminuye la probabilidad de concluir que hay diferencias entre la comparación de proporciones para los tratamientos, ya que los promedios se aproximan a cero. El principal factor para determinar esto son las desviaciones, las cuales son cada vez menores, pasando de desviaciones muy altas cercanas al 19% para n = 5, a desviaciones de solo alrededor del 1.5% para n = 500.
 
 ----
 
@@ -309,15 +310,15 @@ Vemos que a mayor tamaño de muestra disminuye la probabilidad de concluir que h
 
 ### Metodología Punto E {#metodología-punto-e-10}
 
-Se genera la simulación de N = 1000 con 15% de plantas enfermas, uniendola con la simulación ya generadad de N = 1000 con 10% de plantas enfermas y se genera tabla para comprobar que las cantidades sean las correctas.
+Se crea simulación de N = 1000 con 15% de plantas enfermas, uniéndola con la simulación ya generada de N = 1000 con 10% de plantas enfermas y se crea tabla para comprobar que las cantidades sean las correctas.
 
-Se realiza la simulación de 500 veces el calculo de las diferencias de los estimadores, con una muestra de `n = 500` sobre la poblaciónes simuladas.
+Se realiza la simulación de 500 veces el cálculo de las diferencias de los estimadores, con una muestra de `n = 500` sobre las poblaciónes simuladas.
 
-Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de diferencias de estimadores para su analisis.
+Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de diferencias de estimadores para su análisis.
 
-Se realiza la simulación de 500 veces el calculo de las diferencias de los estimadoes, con multiples tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre las poblaciones simuladas, y se colocan en un data frame.
+Se ejecuta simulación de 500 veces el cálculo de las diferencias de los estimadores, con múltiples tamaños de muestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre las poblaciones simuladas, y se colocan en un data frame.
 
-Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones de las diferencias de los estimadoes para distintos tamaños de nuestra `n` sobre las poblaciónes simuladad para su analisis, 
+Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones de las diferencias de los estimadores para distintos tamaños de nuestra `n` sobre las poblaciones simuladas para su análisis.
 
 [Ir a código sección e](#código-e-10)
 
@@ -346,7 +347,7 @@ set.seed(4321)
 muesta_repetida_10_15_multi <-  rep_sample_prop_multi(plantas_enfermas_10_1, 
                                                    plantas_enfermas_15_1,500, 500)
 
-# Creación rain cloud y tabla de resumen sobre las 500 rerpeticiones con muestra
+# Creación rain cloud y tabla de resumen sobre las 500 repeticiones con muestra
 # n = 500, sobre la población simulada al 10% de plantas enfermas
 gg_rain_cloud(
 muesta_repetida_10_15_multi,
@@ -355,16 +356,16 @@ muesta_repetida_10_15_multi,
 medidas_resumen(muesta_repetida_10_15_multi)
 ```
 
-Con un tamaño de muestra n = 500 y 500 repeticiones, se observa que las diferencias de los estimadores de plantas enfermas al 10% vs 15% presentan indicadores de skewness y kurtosis, bajos, que sumados a la grafica nos muestran que los datos pueden considerarse simetricos, igualmente tanto la mediana como el promedio del estimador se aproximan a -5% lo que nos indica que la distribución de las diferencias de los estimadores es in-sesgadas.
+En la comparación de plantas enfermas al 10% vs 15%, con un tamaño de muestra n = 500 y 500 repeticiones, los indicadores de skewness y kurtosis de las diferencias de los estimadores presentan valores bajos, lo que indica que los datos son simétricos. Además, tanto la mediana como el promedio del estimador se aproximan a -5%, lo que sugiere que la distribución de las diferencias de los estimadores es in-sesgada.
 
-El resultado en lo referente a normalidad es similar al de la comparación de plantas enfermas al 10% para tamaños de problación distintos, mostrando en los dos casos que con un tamaño de muestra n = 50 las distribuciones se asemejan a la normalidad.
+En cuanto a la normalidad de la distribución, se obtuvo un resultado similar al de la comparación de plantas enfermas al 10% para diferentes tamaños de población. En ambos casos, se encontró que a partir de un tamaño de muestra n = 50, las distribuciones se comienzan a asemejar a la normalidad.
 
 
 ```{r seccion-e-2, fig.height=5, paged.print=TRUE, echo = FALSE}
 # Reproducibilidad
 set.seed(4321)
 
-# Creación de 500 estimadores, para multiples n de muestras de plantas_enfermas_10_1
+# Creación de 500 estimadores, para múltiples n de muestras de plantas_enfermas_10_1
 # y plantas_enfermas_15_1
 muesta_repetida_multiple_10_15 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
                                     ~ tibble(
@@ -374,26 +375,29 @@ muesta_repetida_multiple_10_15 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200,
                                             ., 500),
                                         n = as_factor(.)))
 
-# Creación de tabla de resumen y qqplots sobre las 500 rerpeticiones con muestra
-# n multiples, sobre las poblaciónes simuladas
+# Creación de tabla de resumen y qqplots sobre las 500 repeticiones con muestra
+# n múltiples, sobre las poblaciones simuladas
 medidas_resumen_multiple(muesta_repetida_multiple_10_15, diff_p_hat, n)
 gg_qq_plot(muesta_repetida_multiple_10_15, diff_p_hat, n,
-"qqplot de la diferencia de estimadores para 500 repeticiones con n multiples",
+"qqplot de la diferencia de estimadores para 500 repeticiones con n múltiples",
            "N = 1000 y 10% plantas enfermas vs. N = 1000 y 15% plantas enfermas")
 
 ```
 
-Podemos ver que a medida que aumentan los tamaños de muestas el promedio de las diferencias de los estimadores se aproxima cada vez más a -5%, sin embargo nunca se llega al valor exacto a diferencia de lo ocurrido en elescenario de diferencia de dos poblaciones con igual número de plantas enfermas donde se obtuvo una diferncias estimada igual a la poblacional en n = 500. Respecto a la desviación estardar esta disminuye cosntantemente a mediada que aumenta n, sin embago sus valores son muy altos en tamaños de muestra altos llegando hasta 21% en n = 5.
+En la comparación de estimadores de plantas enfermas al 10% vs 15%, se observa que a medida que aumenta el tamaño de muestra, el promedio de las diferencias de los estimadores se acerca cada vez más a -5%. Sin embargo, nunca se llega al valor exacto, a diferencia del escenario de diferencia de dos poblaciones con igual número de plantas enfermas, donde se obtuvo una diferencia estimada igual a la poblacional en n=500. También vemos que la desviación estándar disminuye a medida que aumenta n, pero sus valores son muy elevados en tamaños de muestra altos, llegando hasta 21% en n=5.
 
-En las graficas de qqnorm de nota que a mayor n, la distribución de las diferencias de los estimadores se parece más a una distribución normal lo cual se comprueba con el test de Shapiro-Wilk el cual es positivo para normalidad a partir de n = 200.
+En las gráficas de qqnorm se puede observar que, a mayor n, la distribución de las diferencias de los estimadores se asemeja más a una distribución normal, lo cual se comprueba con el test de Shapiro-Wilk, que es positivo para normalidad a partir de n=200.
 
-Comparando los dos escenarios *escenario 1: sin diferencias entre pˆ1 y pˆ2, escenario 2: diferencia de 5%*, vemos que a tamaños de muestras bajos las desviaciones son muy altas a pesar de que los valores medios de las diferencias son cercanos al real, lo cual dependiendo de las muestras podria llevar a escenarios donde erroneamente se prodria indicar una diferencia en los tratamientos para el escenario 1, o sobrestimar el tamaño de la diferencia en el escenario 2. Estas altas desviaciones van disminuyendo a medida que se aumenta el tamaño de dandonos para el escenario 1 que no hay diferencia entre los tratamientos y para el escenario 2 que hay una diferencia aproximada del 5% en los tratamiendos siendo el tratamiento del la Población 1 mejor.
+Al comparar los dos escenarios *escenario 1: sin diferencias entre pˆ1 y pˆ2, escenario 2: diferencia de 5%*, se ve que, a tamaños de muestra bajos, las desviaciones son muy altas, a pesar de que los valores medios de las diferencias son cercanos al real. Esto podría llevar a errores en la interpretación de los tratamientos, indicando una diferencia en el escenario 1 o sobrestimando el tamaño de la diferencia en el escenario 2, dependiendo de las muestras. Sin embargo, estas altas desviaciones van disminuyendo a medida que aumenta el tamaño de muestra, dando como resultado que no hay diferencia entre los tratamientos en el escenario 1 y una diferencia aproximada del 5% en los tratamientos en el escenario 2, siendo el tratamiento de la Población 1 mejor.
+
 
 ---
 
 ## Conclusión
 
-Se concluye que para el caso de la comparación de tratamientos entre 2 poblaciones comparados por la diferecnia entre las proporciones de exitos, es recomendable el contar con metodos rigurosos en lo referente a las repeticiones del experimiento y el tamaño de muestra para el analisis de resultados con el objetivo de contar con la mayor veracidad en la conclusión de los mismos.
+En conclusión, es recomendable contar con métodos rigurosos al comparar tratamientos entre dos poblaciones utilizando la diferencia entre las proporciones de éxitos. Esto implica tener un tamaño de muestra adecuado y un número suficiente de repeticiones del experimento para garantizar la precisión y veracidad en las conclusiones obtenidas. 
+
+Es importante tener en cuenta que a medida que se aumenta el tamaño de muestra, la distribución de las diferencias de los estimadores se asemeja cada vez más a una distribución normal, lo que indica una mejor aproximación a la realidad. Además, se debe tener precaución en el análisis de resultados con tamaños de muestra bajos, ya que las desviaciones pueden ser muy altas y llevar a conclusiones erróneas. 
 
 ---
 

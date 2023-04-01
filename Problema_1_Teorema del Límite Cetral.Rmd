@@ -24,17 +24,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introducción
 
-El presente documento es la respuesta al problema 1 de la Unidad 2 del curso Métodos y Simulación Estidística.
+Este documento tiene como propósito ofrecer la solución al problema 1 de la Unidad 2 del curso Métodos y Simulación Estadística. Cada sección aborda un punto específico que se debe resolver, y se presenta la metodología utilizada y los resultados obtenidos. 
 
-Cada seccion esta compuesta por el puto a resolver, metodologia y resultado.
-
-Al final del documuento se encuentra como anexos los códigos usados para la creación de las metodologias de las secciones, y se cuentan con links en el cuerpo del documento para navegar a travez del mismo.
+Adicionalmente, al final del documento se incluyen anexos con los códigos utilizados en la elaboración de las metodologías para cada sección. Esto permitirá al lector revisar con detalle cada paso del proceso seguido para llegar a las conclusiones presentadas en el documento. Para facilitar la navegación, el documento cuenta con enlaces que permiten acceder a cada uno de los códigos desde la correspondiente sección.
 
 ```{r librerias, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 library(tidyverse)      # Transformación de datos
 library(normtest)       # Pruebas de normalidad
 library(knitr)          # Renderizar tablas
-library(ggdist)         # Expanción de graficas de ggplot
+library(ggdist)         # Expansión de graficas de ggplot
 library(tidyquant)      # Tema de graficas de ggplot
 library(nortest)        # Pruebas de normalidad
 library(rapportools)    # Pruebas de normalidad
@@ -66,7 +64,7 @@ Se genera la simulación de N = 1000 con 50% de plantas enfermas y se genera tab
 ### Resultado A
 
 ```{r seccion-a, paged.print=TRUE, echo = FALSE}
-# Función para generar población n, con una propoporción prop de plantas enfermas
+# Función para generar población n, con una proporción prop de plantas enfermas
 sim_plantas_enfermas <- function(n, prop){
     p <- round(n*prop)
     q <- n-p
@@ -101,7 +99,7 @@ Se verifica el funcionamiento de la función para un `n = 500` sobre la poblaci�
 ```{r seccion-b, paged.print=TRUE, echo = FALSE}
 
 # Función para tomar una muestra de tamaño n de un vector x y calcular la
-# proporcion del estimador.
+# proporción del estimador.
 sample_prop <- function(x, n){
     sample(x, n) %>% 
         sum()/n
@@ -126,13 +124,13 @@ sample_prop(plantas_enfermas_50,500))
 
 Se crea la función `rep_sample_prop` que nos permite repetir la función `sample_prop` un numero `rep` de veces.
 
-Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada.
+Se realiza la simulación de 500 veces el cálculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada.
 
-Se crea la función `gg_rain_cloud`, que toma un vector y genera un grafico de rain cloud.
+Se crea la función `gg_rain_cloud`, que toma un vector y genera un gráfico de rain cloud.
 
-Se crea la función `medidas_resumen`, que toma un vector y muestra en forma de tabla medidas de resumen respecto a simetria, sesgo y variabilidad.
+Se crea la función `medidas_resumen`, que toma un vector y muestra en forma de tabla medidas de resumen respecto a simetría, sesgo y variabilidad.
 
-Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones para su analisis.
+Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones para su análisis.
 
 [Ir a código sección c](#código-c)
 
@@ -180,7 +178,7 @@ medidas_resumen <-  function(x){
     kable()
 }
 
-# Creación rain cloud y tabla de resumen sobre las 500 rerpeticiones con muestra
+# Creación rain cloud y tabla de resumen sobre las 500 repeticiones  con muestra
 # n = 500, sobre la población simulada
 gg_rain_cloud(
     muesta_repetida_50, 
@@ -190,9 +188,9 @@ medidas_resumen(muesta_repetida_50)
 
 ```
 
-Con un tamaño de muestra n = 500 y 500 repeticiones, se observa que los estimadores presentan indicadores de skewness y kurtosis, bajos, que sumados a la grafica nos muestran que los datos pueden considerarse simetricos, igualmente tanto la mediana como el promedio del estimador se aproximan al valor real de la proporcion de la población que es de 50% lo que nos indica que la distribución de los estimadores es in-sesgadas, por último la desviación estandar de los estimadores es del 1.60%, con un rango que oscila aproximadamente dentro del $\pm$ 5%.
+Con un tamaño de muestra de n = 500 y 500 repeticiones, los estimadores presentan indicadores de skewness y kurtosis bajos, lo que sugiere que los datos son simétricos. Además, tanto la mediana como el promedio del estimador se acercan al valor real de la proporción de la población que es del 50%, lo que indica que la distribución de los estimadores es insesgada. Finalmente, la desviación estándar de los estimadores es del 1.60%, con un rango aproximado de $\pm$ 5%.
 
-Todo lo anterior nos muestra que con un tamaño de muestra de n = 500 la distribución de los estimadores se asemeja a una distribución normal y muestran una buena aproximación a la proporción real de la población.
+Estos resultados demuestran que con un tamaño de muestra de n = 500, la distribución de los estimadores se asemeja a una distribución normal y muestra una buena aproximación a la proporción real de la población. 
 
 ------------------------------------------------------------------------
 
@@ -203,13 +201,13 @@ Todo lo anterior nos muestra que con un tamaño de muestra de n = 500 la distrib
 
 ### Metodología Punto D
 
-Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con multiles tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada, y se colocan en un data frame.
+Se realiza la simulación de 500 veces el cálculo del estimador $\hat{p}$ con múltiples tamaños de muestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada, y se colocan en un data frame.
 
-Se crea la función `medidas_resumen_multiple`, que toma un data frame y muestra en forma de tabla medidas de resumen y tests de normalidad de una columna seleccionada agupados por otra columna seleccionada.
+Se crea la función `medidas_resumen_multiple`, que toma un data frame y muestra en forma de tabla medidas de resumen y test de normalidad de una columna seleccionada agrupados por otra columna seleccionada.
 
-Se crea la función `gg_qq_plot`, que toma un data frame y realiza graficos de normalidad tipo `qqnor` de una columna seleccionada, agrupados por otra columna seleccionada.
+Se crea la función `gg_qq_plot`, que toma un data frame y realiza gráficos de normalidad tipo `qqnorm` de una columna seleccionada, agrupados por otra columna seleccionada.
 
-Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` para su analisis.
+Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` para su análisis.
 
 [Ir a código sección d](#código-d)
 
@@ -220,7 +218,7 @@ Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 50
 # Reproducibilidad
 set.seed(4321)
 
-# Creación de 500 estimadores, para multiples n de muestras de plantas_enfermas_50
+# Creación de 500 estimadores, para múltiples n de muestras de plantas_enfermas_50
 muesta_repetida_multiple_50 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
                                     ~ tibble(
                                         p_hat = rep_sample_prop(plantas_enfermas_50, 
@@ -260,19 +258,18 @@ gg_qq_plot <- function(df, value, group, title, subtitle){
             subtitle = subtitle)
 }
 
-
-# Creación de tabla de resumen y qqplots sobre las 500 rerpeticiones con muestra
-# n multiples, sobre la población simulada
+# Creación de tabla de resumen y qqplots sobre las 500 repeticiones con muestra
+# n múltiples, sobre la población simulada
 medidas_resumen_multiple(muesta_repetida_multiple_50, p_hat, n)
 gg_qq_plot(muesta_repetida_multiple_50, p_hat, n,
-           "qqplot del estimador para 500 repeticiones con n multiples",
+           "qqplot del estimador para 500 repeticiones con n múltiples",
            "50% plantas enfermas")
 
 ```
 
-Podemos ver que a medida que aumentan los tamaños de muestas el promedio y mediana de los estimadores se aproximan cada vez más a la proporción real de la población, igualmente la desviación estardar disminuye. Así mismo se observa en las graficas de qqnorm que a mayor n, la distribución de los estimadores se parece más a una distrivución normal lo cual se comprueba con el test de Shapiro-Wilk el cual es positivo para normalidad a partir de n = 200.
+Las simulaciones realizadas muestran que a medida que aumenta el tamaño de la muestra en el estudio de plantas enfermas, los estimadores de proporción se aproximan cada vez más a la proporción real de la población, lo cual es indicativo de una buena precisión. Además, se puede observar que la desviación estándar de los estimadores disminuye a medida que aumenta el tamaño de la muestra. Las gráficas de qqnorm muestran que la distribución de los estimadores se asemeja cada vez más a una distribución normal a medida que se aumenta el tamaño de la muestra. De hecho, el test de Shapiro-Wilk confirma que la distribución se ajusta a una normal a partir de n = 200.
 
-Podemos entonces decir que estas simulaciones demuestran el teorema del limite central, ya que la distribución de la media de nuestras muestras aleatorias de plantas enfermas se aproxima a una distribución normal cuando el tamaño de la muestra es suficientemente grande.
+En consecuencia, podemos concluir que estas simulaciones demuestran el teorema del límite central, ya que la distribución de la media de nuestras muestras aleatorias de plantas enfermas se aproxima a una distribución normal cuando el tamaño de la muestra es suficientemente grande.
 
 ----
 
@@ -284,13 +281,13 @@ Podemos entonces decir que estas simulaciones demuestran el teorema del limite c
 
 Se genera la simulación de N = 1000 con 10% de plantas enfermas y se genera tabla para comprobar que las cantidades sean las correctas.
 
-Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada para 10% de plantas enfermas.
+Se realiza la simulación de 500 veces el cálculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada para 10% de plantas enfermas.
 
-Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de plantas enfermas al 10% para su analisis.
+Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de plantas enfermas al 10% para su análisis.
 
-Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con multiles tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada con plantas enfermas al 10%, y se colocan en un data frame.
+Se realiza la simulación de 500 veces el cálculo del estimador $\hat{p}$ con multiles tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada con plantas enfermas al 10%, y se colocan en un data frame.
 
-Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` sobre la población simulada con plantas enfermas al 10% para su analisis, 
+Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` sobre la población simulada con plantas enfermas al 10% para su análisis.
 
 [Ir a código sección e](#código-e-10)
 
@@ -298,7 +295,7 @@ Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 50
 
 ```{r seccion-e-1, fig.height=2.5, paged.print=TRUE, echo = FALSE}
 
-# Simulando para N = 100 y 0.1 de plantas enfermas
+# Simulando para N = 1000 y 0.1 de plantas enfermas
 plantas_enfermas_10 <- sim_plantas_enfermas(1000, 0.1)
 
 # Tabla para visualizar simulación
@@ -312,7 +309,7 @@ set.seed(1234)
 # Creación de 500 estimadores, para un n = 500 de muestras de plantas_enfermas_10
 muesta_repetida_10 <-  rep_sample_prop(plantas_enfermas_10,500, 500)
 
-# Creación rain cloud y tabla de resumen sobre las 500 rerpeticiones con muestra
+# Creación rain cloud y tabla de resumen sobre las 500 repeticiones con muestra
 # n = 500, sobre la población simulada al 10% de plantas enfermas
 gg_rain_cloud(
 muesta_repetida_10,
@@ -321,47 +318,47 @@ muesta_repetida_10,
 medidas_resumen(muesta_repetida_10)
 ```
 
-Con una proporción de plantas enfermas del 10%, se observa que los estimadores presentan indicadores de skewness y kurtosis, bajos, que sumados a la grafica nos muestran que los datos pueden considerarse simetricos, igualmente tanto la mediana como el promedio del estimador se aproximan al valor real de la proporcion de la población que es de 10% lo que nos indica que la distribución de los estimadores es in-sesgadas, así mismo la desviación estandar de los estimadores es del 0.91%, con un rango que oscila aproximadamente dentro del $\pm$ 2%.
+Con una proporción del 10% de plantas enfermas en la población, se ha observado que los estimadores muestran indicadores de skewness y kurtosis bajos. Además, la gráfica de los datos sugiere que se trata de una distribución simétrica. Tanto la mediana como el promedio del estimador se aproximan al valor real de la proporción de la población, lo que indica que la distribución de los estimadores es insesgada. La desviación estándar de los estimadores es del 0.91%, y el rango oscila aproximadamente dentro del $\pm$ 2%.
 
-Todo lo anterior nos muestra que con un tamaño de muestra de n = 500 la distribución de los estimadores, de la simulación con plantas enfermas al 10% se asemeja a una distribución normal y muestran una buena aproximación a la proporción real de la población.
+Estos resultados indican que, con un tamaño de muestra de n=500, la distribución de los estimadores obtenidos a través de la simulación con una proporción del 10% de plantas enfermas se asemeja a una distribución normal y muestra una buena aproximación al valor real de la proporción de la población.
 
-Comparado con la simulación de plantas enfermas al 50% se nota que la simulación con plantas enfermas al 10% presenta una distibución más aplanada, pero con una variabilidad menor.
+En comparación con la simulación de plantas enfermas al 50%, se observa que la simulación con una proporción del 10% muestra una distribución más aplanada, pero con una variabilidad menor.
 
 ```{r seccion-e-2, fig.height=5, paged.print=TRUE, echo = FALSE}
 # Reproducibilidad
 set.seed(1234)
 
-# Creación de 500 estimadores, para multiples n de muestras de plantas_enfermas_10
+# Creación de 500 estimadores, para múltiples  n de muestras de plantas_enfermas_10
 muesta_repetida_multiple_10 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
                                     ~ tibble(
                                         p_hat = rep_sample_prop(plantas_enfermas_10, 
                                                                 ., 500),
                                         n = as_factor(.)))
 
-# Creación de tabla de resumen y qqplots sobre las 500 rerpeticiones con muestra
-# n multiples, sobre la población simulada al 10% de plantas enfermas
+# Creación de tabla de resumen y qqplots sobre las 500 repeticiones  con muestra
+# n múltiples, sobre la población simulada al 10% de plantas enfermas
 medidas_resumen_multiple(muesta_repetida_multiple_10, p_hat, n)
 gg_qq_plot(muesta_repetida_multiple_10, p_hat, n,
-"qqplot del estimador para 500 repeticiones con n multiples",
+"qqplot del estimador para 500 repeticiones con n múltiples",
 "10% plantas enfermas")
 
 ```
 
-Para la simulación con plantas enfermas al 10%, podemos ver que a medida que aumentan los tamaños de muestas el promedio y mediana de los estimadores se aproximan cada vez más a la proporción real de la población, igualmente la desviación estardar disminuye. Así mismo se observa en las graficas de qqnorm que para las muestras de tamaño n = a 50 a n = 60, las distribuaciones suelen tener mayor peso hacia los porcentajes menores a 10% por lo cual no se alcanza la normalidad, este fenomeno desaparece al llegar a n = 100 donde la distribución de los estimadores se parece más a una distribución normal, se ve que solo n = 500 logra pasar el test de Shapiro-Wilk para normalidad.
+En la simulación de plantas enfermas al 10%, se observa que a medida que aumenta el tamaño de la muestra, tanto el promedio como la mediana de los estimadores se aproximan más a la proporción real de la población. Al mismo tiempo, la desviación estándar disminuye. Las gráficas de qqnorm muestran que, para muestras de tamaño n = 5 a n = 60, las distribuciones suelen tener mayor peso hacia los porcentajes menores a 10%, lo que impide alcanzar la normalidad. Sin embargo, este fenómeno desaparece al llegar a n = 100, donde la distribución de los estimadores se asemeja más a una distribución normal. Solo a partir de n = 500 se logra pasar el test de Shapiro-Wilk para normalidad.
 
-Podemos entonces decir que estas simulaciones demuestran el teorema del limite central, ya que la distribución de la media de las muestras aleatorias de plantas enfermas al 10% se aproxima a una distribución normal cuando el tamaño de la muestra es grande, con la anitación que para esta simulación en particular fue necesario un 50% de muestras de la población para alcanzar la normalidad mediante un test estadistico, graficamente podemos decir que se aproxima a partir de n = 100.
+En conclusión, estas simulaciones confirman el teorema del límite central, ya que la distribución de la media de las muestras aleatorias de plantas enfermas al 10% se aproxima a una distribución normal cuando el tamaño de la muestra es grande. Sin embargo, para esta simulación en particular, fue necesario un 50% de muestras de la población para alcanzar la normalidad mediante un test estadístico. Gráficamente, se puede decir que la aproximación a una distribución normal comienza a partir de n = 100.
 
 ### Metodología Punto E (90%) {#metodología-punto-e-90}
 
 Se genera la simulación de N = 1000 con 90% de plantas enfermas y se genera tabla para comprobar que las cantidades sean las correctas.
 
-Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada para 90% de plantas enfermas.
+Se realiza la simulación de 500 veces el cálculo del estimador $\hat{p}$ con una muestra de `n = 500` sobre la población simulada para 90% de plantas enfermas.
 
-Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de plantas enfermas al 90% para su analisis.
+Se usan `gg_rain_cloud` y `medidas_resumen` sobre las 500 simulaciones de plantas enfermas al 90% para su análisis.
 
-Se realiza la simulación de 500 veces el calculo del estimador $\hat{p}$ con multiles tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada con plantas enfermas al 90%, y se colocan en un data frame.
+Se realiza la simulación de 500 veces el cálculo del estimador $\hat{p}$ con multiles tamaños de muiestra `n` (5, 10, 15, 20, 30, 50, 60, 100, 200 y 500) sobre la población simulada con plantas enfermas al 90%, y se colocan en un data frame.
 
-Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` sobre la población simulada con plantas enfermas al 90% para su analisis, 
+Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 500 simulaciones para distintos tamaños de nuestra `n` sobre la población simulada con plantas enfermas al 90% para su análisis.
 
 [Ir a código sección e](#código-e-90)
 
@@ -369,7 +366,7 @@ Se usan `medidas_resumen_multiple` y `gg_qq_plot` sobre el data frame con las 50
 
 ```{r seccion-e-3, fig.height=2.5, paged.print=TRUE, echo = FALSE}
 
-# Simulando para N = 100 y 0.9 de plantas enfermas
+# Simulando para N = 1000 y 0.9 de plantas enfermas
 plantas_enfermas_90 <- sim_plantas_enfermas(1000, 0.9)
 
 # Tabla para visualizar simulación
@@ -383,7 +380,7 @@ set.seed(1234)
 # Creación de 500 estimadores, para un n = 500 de muestras de plantas_enfermas_90
 muesta_repetida_90 <-  rep_sample_prop(plantas_enfermas_90,500, 500)
 
-# Creación rain cloud y tabla de resumen sobre las 500 rerpeticiones con muestra
+# Creación rain cloud y tabla de resumen sobre las 500 repeticiones  con muestra
 # n = 500, sobre la población simulada al 90% de plantas enfermas
 gg_rain_cloud(
 muesta_repetida_90,
@@ -392,42 +389,42 @@ muesta_repetida_90,
 medidas_resumen(muesta_repetida_90)
 ```
 
-Con una proporción de plantas enfermas del 90% se nota un comportamiento similar al de plantas enfermas al 10% con kewness y kurtosis bajos, una grafica algo aplanada, mediana y media aproximadas a la proporción real de la poblacion (90%), baja desviación 0.92% y rango de aproximadamente $\pm$ 2%, en general datos que muestran una distribución in-sesgadas y baja variabilidad.
+Con una proporción de plantas enfermas del 90%, se observa un comportamiento similar al de plantas enfermas al 10%. Los indicadores de skewness y kurtosis son bajos, la gráfica es algo aplanada y tanto la mediana como el promedio del estimador se aproximan al valor real de la proporción de la población, que en este caso es del 90%. Además, la desviación estándar es baja, con un valor del 0.92%, y el rango oscila alrededor de $\pm$ 2%. En general, los datos muestran una distribución in-sesgada y baja variabilidad.
 
-Vemos que tambien con un tamaño de muestra de n = 500 la distribución de los estimadores, de la simulación con plantas enfermas, en esta ocación al 90%, se asemeja a una distribución normal y muestran una buena aproximación a la proporción real de la población.
+Al igual que en la simulación con plantas enfermas al 10%, se puede observar que con un tamaño de muestra de n = 500, la distribución de los estimadores de la simulación con plantas enfermas al 90% se asemeja a una distribución normal y muestra una buena aproximación a la proporción real de la población.
 
 
 ```{r seccion-e-4, fig.height=5, paged.print=TRUE, echo = FALSE}
 # Reproducibilidad
 set.seed(1234)
 
-# Creación de 500 estimadores, para multiples n de muestras de plantas_enfermas_90
+# Creación de 500 estimadores, para múltiples  n de muestras de plantas_enfermas_90
 muesta_repetida_multiple_90 <-  map_df(c(5, 10, 15, 20, 30, 50, 60, 100, 200, 500),
                                     ~ tibble(
                                         p_hat = rep_sample_prop(plantas_enfermas_90, 
                                                                 ., 500),
                                         n = as_factor(.)))
 
-# Creación de tabla de resumen y qqplots sobre las 500 rerpeticiones con muestra
-# n multiples, sobre la población simulada al 90% de plantas enfermas
+# Creación de tabla de resumen y qqplots sobre las 500 repeticiones  con muestra
+# n múltiples, sobre la población simulada al 90% de plantas enfermas
 medidas_resumen_multiple(muesta_repetida_multiple_90, p_hat, n)
 gg_qq_plot(muesta_repetida_multiple_90, p_hat, n,
-"qqplot del estimador para 500 repeticiones con n multiples",
+"qqplot del estimador para 500 repeticiones con n múltiples",
 "90% plantas enfermas")
 
 ```
  
-Para la simulación con plantas enfermas al 90%, vemos igualmente que a medida que aumentan los tamaños de muestas el promedio y mediana de los estimadores se aproximan cada vez más a la proporción real de la población (para este caso 90%) e igualment su desviación estardar disminuye. Así mismo obsevamos en las graficas de qqnorm  para las muestras de tamaño n = a 50 a n = 60, las distribuaciones suelen tener mayor peso hacia los porcentajes mayores a 90% no encajando dentro de la normalidad, al llegar a n = 100 las graficas se asemejan más a la normalidad pero con algunos puntos por fuera en los 2 extremos, solo al llegar a n = 200 se ve claramente la normalidad y solo en n = 500 se logra pasar el test de Shapiro-Wilk con un p-value de 0.12.
+En la simulación con plantas enfermas al 90%, se observa que a medida que aumenta el tamaño de la muestra, tanto el promedio como la mediana de los estimadores se acercan cada vez más a la proporción real de la población (en este caso, 90%), y su desviación estándar disminuye. Además, al analizar las gráficas de qqnorm para muestras de tamaño n=5 a n=60, se nota que las distribuciones tienen un mayor peso hacia los porcentajes mayores al 90% y no se ajustan a la normalidad. Al llegar a n=100, las gráficas se asemejan más a la normalidad pero con algunos puntos fuera de los dos extremos. Solo al llegar a n=200 se observa una clara normalidad y solo en n=500 se logra pasar la prueba de Shapiro-Wilk con un p-valor de 0.12.
 
-Podemos entonces decir que estas simulaciones demuestran una vez más el teorema del limite central, ya que la distribución de la media de las muestras aleatorias de plantas enfermas al 90% se aproxima a una distribución normal cuando el tamaño de la muestra es grande, sin embargo de los 3 porcentajes de plantas enfermas, se nota que que la simulación de plantas enfermas al 90% fue el que necesitó mayor tamño de muestra para acercarce a la normalidad.
+Por lo tanto, se puede concluir que estas simulaciones demuestran una vez más el teorema del límite central, ya que la distribución de la media de las muestras aleatorias de plantas enfermas al 90% se aproxima a una distribución normal cuando el tamaño de la muestra es grande. Sin embargo, de los tres porcentajes de plantas enfermas vistos en este documento, se nota que la simulación de plantas enfermas al 90% necesitó un mayor tamaño de muestra para acercarse a la normalidad.
  
 ---- 
 
 ## Conclusión
 
-Mediante los ejercicios realizados con simulaciones de proporciones de poblacones de plantas enfermas,  se pudo demostrar el teorema de limite central el cual dice que; *"bajo ciertas condiciones, la distribución de la media de una muestra aleatoria de una población se aproxima a una distribución normal cuando el tamaño de la muestra es suficientemente grande"*, viendo como a medida que aumentabamos el tamaño de muestra efectivamente las estimaciones de nuestras simulaciones tomaban formas cada vez más normales. 
+Durante los ejercicios en los que se utilizaron simulaciones para analizar las proporciones de poblaciones de plantas enfermas, se pudo demostrar el teorema del límite central. Según este teorema, *"si se cumplen ciertas condiciones, la distribución de la media de una muestra aleatoria de una población se aproxima a una distribución normal cuando el tamaño de la muestra es lo suficientemente grande"*. Al aumentar el tamaño de la muestra en nuestras simulaciones, se pudo observar cómo las estimaciones tomaban formas cada vez más similares a la distribución normal.
 
-Obserbamos tambien que para las proporciones simuladas el umbral de normalidad se encontro muy por arriba de n\>30 llegando a ubicarse por arriba de n\>60 cuando la proporcion era del 50% y por arriba de n\>200 cuando la proporción se acerca la los extremos (10% y 90%), lo cual nos indica que, en el caso de las proporciones, se necesitan tamoños de muestras mayores para alcanzar niveles de normalidad. 
+Además, se observó que para las proporciones simuladas, el umbral de normalidad fue distinto a n\>30, llegando a ubicarse por encima de n\>60 cuando la proporción era del 50%, y por encima de n\>200 cuando la proporción se acercaba a los extremos (10% y 90%). Esto sugiere que, en el caso de las proporciones, se necesitan tamaños de muestra más grandes para alcanzar niveles de normalidad.
 
 ---
 
