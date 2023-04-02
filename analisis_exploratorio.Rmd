@@ -30,6 +30,7 @@ library(knitr) # Paquete para creación de tablas en formato de salida
 # Se crea un objeto "datos_vivienda" que contiene los datos de vivienda4
 datos_vivienda <- vivienda4
 
+# Se cargan funciones personalizadas
 source("funciones_personalizadas.R")
     
 ```
