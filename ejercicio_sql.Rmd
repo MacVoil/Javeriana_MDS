@@ -1,0 +1,135 @@
+---
+title: "SQL Excercise"
+author: "Camilo Vega"
+output:
+  pdf_document:
+    latex_engine: xelatex
+header-includes:
+  - \usepackage{fontspec}
+  - \setmonofont{Consolas}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(DBI)
+library(tidyverse)
+library(ggplot2)
+library(odbc)
+library(knitr)
+
+con <- DBI::dbConnect(odbc::odbc(),
+                      Driver   = "MySQL ODBC 8.0 Unicode Driver",
+                      Database = "university",
+                      Server   = "localhost",
+                      UID      = "root",
+                      PWD      = "+Mysql04981",
+                      Port     = 3306)
+
+```
+
+# Punto A
+
+> Listar todos los cursos ofrecidos en la carrera de Ingeniería de Sistemas. Para este caso se debe tener en cuenta que un mismo curso puede ser dictado por profesores diferentes, en salones diferentes y en horarios diferentes. Se deben obtener los siguientes datos: el nombre del curso, el nombre completo del profesor que dicta el curso, el salón en que se dicta el curso y la hora en la que se dicta del curso.
+
+
+## Query
+
+Se ha agregado la columna "DIA" a la consulta. Aunque actualmente los horarios de cada curso son independientes del día, es posible que en el futuro se presenten cursos que se dicten en diferentes días con horarios distintos.
+
+```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
+
+SELECT
+    CURSOS.NOMBRE AS CURSO,
+    USUARIOS.NOMBRE|| ' ' ||APELLIDO AS PROFESOR,
+    SALONES.NOMBRE AS SALON,
+    DIA,
+    HORA_INICIO || ' a ' || HORA_FIN AS HORARIO
+FROM CALENDARIO_CURSOS
+JOIN CURSOS
+    ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
+JOIN FACULTADES
+    ON CURSOS.ID_FACULTAD = FACULTADES.ID_FACULTAD
+JOIN CARRERAS
+    ON CURSOS.ID_FACULTAD = CARRERAS.ID_FACULTAD
+JOIN USUARIOS
+    ON CALENDARIO_CURSOS.ID_PROFESOR = USUARIOS.ID_USUARIO
+JOIN SALONES
+    ON CALENDARIO_CURSOS.ID_SALON = SALONES.ID_SALON
+WHERE CARRERAS.NOMBRE = 'Ingeniería de Sistemas';
+
+```
+
+
+## Resultado
+
+```{r echo=FALSE, paged.print=TRUE}
+
+tbl(con, "CALENDARIO_CURSOS") |> 
+    left_join(tbl(con, "CURSOS"), by = "ID_CURSO") |>
+    left_join(tbl(con, "FACULTADES"), by = "ID_FACULTAD") |> 
+    left_join(tbl(con, "CARRERAS"), by = "ID_FACULTAD") |> 
+    left_join(tbl(con, "USUARIOS"), by = c("ID_PROFESOR" = "ID_USUARIO")) |> 
+    left_join(tbl(con, "SALONES"), by = "ID_SALON") |> 
+    filter(ID_CARRERA == 1) |> 
+    select(NOMBRE.x, NOMBRE.y.y, APELLIDO, NOMBRE, DIA, HORA_INICIO, HORA_FIN) |>
+    rename(CURSO = NOMBRE.x, 
+           NOMBRE_PROFESOR = NOMBRE.y.y,
+           APELLIDO_PROFESOR = APELLIDO,
+           SALON = NOMBRE) |> collect() |> 
+    unite(PROFESOR, c(NOMBRE_PROFESOR, APELLIDO_PROFESOR), sep = " ") |> 
+    unite(HORARIO, c(HORA_INICIO, HORA_FIN), sep = " a ") |> 
+    kable()
+```
+
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+dbDisconnect(con)
+```
+
+
+
+```{r}
+# WITH profesores_carreras AS (
+#   SELECT p.nombre_completo, c.nombre_carrera, cu.nombre_curso
+#   FROM profesores p
+#   JOIN cursos_profesores cp ON p.id_profesor = cp.id_profesor
+#   JOIN cursos cu ON cu.id_curso = cp.id_curso
+#   JOIN carreras c ON c.id_carrera = cu.id_carrera
+#   GROUP BY p.nombre_completo, c.nombre_carrera, cu.nombre_curso
+#   HAVING COUNT(DISTINCT c.id_carrera) = 2
+# )
+# SELECT pc.nombre_completo, pc.nombre_curso, pc.nombre_carrera
+# FROM profesores_carreras pc
+# JOIN cursos_profesores cp ON cp.id_curso = (SELECT id_curso FROM cursos WHERE nombre_curso = pc.nombre_curso)
+# JOIN profesores p ON p.id_profesor = cp.id_profesor
+# ORDER BY pc.nombre_completo, pc.nombre_curso;
+
+# ibrary(dplyr)
+# 
+# profesores_carreras <- inner_join(
+#   inner_join(
+#     inner_join(
+#       profesores, cursos_profesores, by = "id_profesor"
+#     ), cursos, by = "id_curso"
+#   ), carreras, by = "id_carrera"
+# ) %>% 
+#   group_by(nombre_completo, nombre_carrera, nombre_curso) %>% 
+#   summarise(count = n_distinct(id_carrera)) %>% 
+#   filter(count == 2) %>% 
+#   select(-count)
+# 
+# resultados <- inner_join(
+#   inner_join(
+#     profesores_carreras, cursos_profesores, by = "nombre_curso"
+#   ), profesores, by = "id_profesor"
+# ) %>% 
+#   select(nombre_completo, nombre_curso, nombre_carrera) %>% 
+#   arrange(nombre_completo, nombre_curso)
+
+```
+
