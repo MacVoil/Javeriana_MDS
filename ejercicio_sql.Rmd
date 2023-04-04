@@ -37,28 +37,28 @@ con <- DBI::dbConnect(odbc::odbc(),
 
 ## Query
 
-Se ha agregado la columna "DIA" a la consulta. Aunque actualmente los horarios de cada curso son independientes del día, es posible que en el futuro se presenten cursos que se dicten en diferentes días con horarios distintos.
+***NOTA:*** Se utiliza la cláusula `DISTINCT` en el QUERY para obtener valores únicos, dado que en los datos actuales los cursos que se dictan en distintos días tienen el mismo horario. Si en el futuro esta situación cambia  se recomienda incluir el campo DIA en la consulta, y eliminar la cláusula `DISTINCT`."
 
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
-SELECT
+SELECT DISTINCT
     CURSOS.NOMBRE AS CURSO,
     USUARIOS.NOMBRE|| ' ' ||APELLIDO AS PROFESOR,
     SALONES.NOMBRE AS SALON,
-    DIA,
     HORA_INICIO || ' a ' || HORA_FIN AS HORARIO
 FROM CALENDARIO_CURSOS
 JOIN CURSOS
     ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
-JOIN FACULTADES
-    ON CURSOS.ID_FACULTAD = FACULTADES.ID_FACULTAD
+JOIN CURSOS_CARRERAS
+    ON CURSOS.ID_CURSO = CURSOS_CARRERAS.ID_CURSO
 JOIN CARRERAS
-    ON CURSOS.ID_FACULTAD = CARRERAS.ID_FACULTAD
+    ON CURSOS_CARRERAS.ID_CARRERA = CARRERAS.ID_CARRERA
 JOIN USUARIOS
     ON CALENDARIO_CURSOS.ID_PROFESOR = USUARIOS.ID_USUARIO
 JOIN SALONES
     ON CALENDARIO_CURSOS.ID_SALON = SALONES.ID_SALON
-WHERE CARRERAS.NOMBRE = 'Ingeniería de Sistemas';
+WHERE CARRERAS.NOMBRE = 'Ingeniería de Sistemas'
+ORDER BY CURSOS.NOMBRE;
 
 ```
 
@@ -68,23 +68,64 @@ WHERE CARRERAS.NOMBRE = 'Ingeniería de Sistemas';
 ```{r echo=FALSE, paged.print=TRUE}
 
 tbl(con, "CALENDARIO_CURSOS") |> 
-    left_join(tbl(con, "CURSOS"), by = "ID_CURSO") |>
-    left_join(tbl(con, "FACULTADES"), by = "ID_FACULTAD") |> 
-    left_join(tbl(con, "CARRERAS"), by = "ID_FACULTAD") |> 
-    left_join(tbl(con, "USUARIOS"), by = c("ID_PROFESOR" = "ID_USUARIO")) |> 
-    left_join(tbl(con, "SALONES"), by = "ID_SALON") |> 
-    filter(ID_CARRERA == 1) |> 
-    select(NOMBRE.x, NOMBRE.y.y, APELLIDO, NOMBRE, DIA, HORA_INICIO, HORA_FIN) |>
-    rename(CURSO = NOMBRE.x, 
-           NOMBRE_PROFESOR = NOMBRE.y.y,
-           APELLIDO_PROFESOR = APELLIDO,
-           SALON = NOMBRE) |> collect() |> 
-    unite(PROFESOR, c(NOMBRE_PROFESOR, APELLIDO_PROFESOR), sep = " ") |> 
-    unite(HORARIO, c(HORA_INICIO, HORA_FIN), sep = " a ") |> 
+  left_join(tbl(con, "CURSOS"), by = "ID_CURSO") |>
+  left_join(tbl(con, "CURSOS_CARRERAS"), by = "ID_CURSO") |> 
+  left_join(tbl(con, "CARRERAS"), by = "ID_CARRERA") |> 
+  left_join(tbl(con, "USUARIOS"), by = c("ID_PROFESOR" = "ID_USUARIO")) |> 
+  left_join(tbl(con, "SALONES"), by = "ID_SALON") |> 
+  filter(ID_CARRERA == 1) |> 
+  select(NOMBRE.x, NOMBRE.x.x, APELLIDO, NOMBRE.y.y, HORA_INICIO, HORA_FIN) |>
+  rename(CURSO = NOMBRE.x, 
+         NOMBRE_PROFESOR = NOMBRE.x.x,
+         APELLIDO_PROFESOR = APELLIDO,
+         SALON = NOMBRE.y.y) |> collect() |> 
+  unite(PROFESOR, c(NOMBRE_PROFESOR, APELLIDO_PROFESOR), sep = " ") |> 
+  unite(HORARIO, c(HORA_INICIO, HORA_FIN), sep = " a ") |> 
+  distinct() |> 
+  arrange(CURSO) |> 
     kable()
 ```
 
 
+# Punto B
+
+> Obtener la lista de profesores que dictan cursos pertenecientes a la facultad de Humanidades. Se deben obtener los siguientes datos: el nombre completo del profesor y el nombre del curso que dicta.
+
+## Query
+
+```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
+
+SELECT DISTINCT
+    USUARIOS.NOMBRE|| ' ' ||APELLIDO AS PROFESOR,
+    CURSOS.NOMBRE AS CURSO
+FROM CALENDARIO_CURSOS
+JOIN CURSOS
+    ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
+JOIN FACULTADES
+    ON CURSOS.ID_FACULTAD = FACULTADES.ID_FACULTAD
+JOIN USUARIOS
+    ON CALENDARIO_CURSOS.ID_PROFESOR = USUARIOS.ID_USUARIO
+WHERE FACULTADES.NOMBRE = 'Humanidades y Ciencias Sociales'
+ORDER BY PROFESOR;
+
+```
+
+## Resultado
+
+```{r echo=FALSE, paged.print=TRUE}
+
+tbl(con, "CALENDARIO_CURSOS") |> 
+  left_join(tbl(con, "CURSOS"), by = "ID_CURSO") |>
+  left_join(tbl(con, "FACULTADES"), by = "ID_FACULTAD") |> 
+  left_join(tbl(con, "USUARIOS"), by = c("ID_PROFESOR" = "ID_USUARIO")) |> 
+  filter(ID_FACULTAD == 2) |> 
+  select(NOMBRE, APELLIDO, NOMBRE.x) |>
+  distinct() |>
+  rename(CURSO = NOMBRE.x) |> collect() |> 
+  unite(PROFESOR, c(NOMBRE, APELLIDO), sep = " ") |> 
+  arrange(PROFESOR) |> 
+    kable()
+```
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
