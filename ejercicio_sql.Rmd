@@ -4,6 +4,10 @@ author: "Camilo Vega"
 output:
   pdf_document:
     latex_engine: xelatex
+    toc: true
+    toc_depth: 3
+toc-title: "Contenido"
+linkcolor: blue
 header-includes:
   - \usepackage{fontspec}
   - \setmonofont{Consolas}
@@ -29,6 +33,8 @@ con <- DBI::dbConnect(odbc::odbc(),
                       Port     = 3306)
 
 ```
+
+---
 
 # Punto A
 
@@ -86,6 +92,7 @@ tbl(con, "CALENDARIO_CURSOS") |>
     kable()
 ```
 
+---
 
 # Punto B
 
@@ -127,50 +134,75 @@ tbl(con, "CALENDARIO_CURSOS") |>
     kable()
 ```
 
+---
+
+# Punto C
+
+> Obtener la lista de profesores que dictan cursos en **dos** carreras diferentes. Se deben obtener los siguientes datos: el nombre completo del profesor, el nombre del curso que dicta y el nombre de la carrera a la que pertenece el curso. Pista: averigua cómo funciona la sentencia **WITH**.
+
+## Query
+
+```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
+
+WITH p2c AS(
+    SELECT DISTINCT
+      USUARIOS.ID_USUARIO,
+      USUARIOS.NOMBRE,
+      APELLIDO
+    FROM CALENDARIO_CURSOS
+    JOIN CURSOS
+      ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
+    JOIN CURSOS_CARRERAS
+      ON CALENDARIO_CURSOS.ID_CURSO = CURSOS_CARRERAS.ID_CURSO
+    JOIN CARRERAS
+      ON CURSOS_CARRERAS.ID_CARRERA = CARRERAS.ID_CARRERA
+    JOIN USUARIOS
+      ON CALENDARIO_CURSOS.ID_PROFESOR = USUARIOS.ID_USUARIO
+    GROUP BY USUARIOS.ID_USUARIO, USUARIOS.NOMBRE, APELLIDO
+       HAVING COUNT(DISTINCT CARRERAS.ID_CARRERA) = 2
+)
+SELECT DISTINCT
+    p2c.NOMBRE|| ' ' ||p2c.APELLIDO AS PROFESOR,
+    CURSOS.NOMBRE AS CURSO,
+    CARRERAS.NOMBRE AS CARRERA
+FROM p2c
+JOIN CALENDARIO_CURSOS
+    ON p2c.ID_USUARIO = CALENDARIO_CURSOS.ID_PROFESOR
+JOIN CURSOS
+    ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
+JOIN CURSOS_CARRERAS
+    ON CURSOS.ID_CURSO = CURSOS_CARRERAS.ID_CURSO
+JOIN CARRERAS
+    ON CURSOS_CARRERAS.ID_CARRERA = CARRERAS.ID_CARRERA
+ORDER by PROFESOR, CARRERA;
+
+```
+
+## Respuesta
+```{r echo=FALSE, paged.print=TRUE}
+
+tbl(con, "CALENDARIO_CURSOS") |> 
+  left_join(tbl(con, "CURSOS"), by = "ID_CURSO") |>
+  left_join(tbl(con, "CURSOS_CARRERAS"), by = "ID_CURSO") |> 
+  left_join(tbl(con, "CARRERAS"), by = "ID_CARRERA") |> 
+  left_join(tbl(con, "USUARIOS"), by = c("ID_PROFESOR" = "ID_USUARIO")) |>  
+  select(NOMBRE, APELLIDO, NOMBRE.x, NOMBRE.y) |>
+  rename(CURSO = NOMBRE.x,
+         CARRERA = NOMBRE.y) |>  
+  collect() |> 
+  unite(PROFESOR, c(NOMBRE, APELLIDO), sep = " ") |> 
+  distinct() |> 
+  group_by(PROFESOR) |> 
+  filter(n_distinct(CARRERA) == 2) |> 
+  arrange(PROFESOR, CARRERA) |> 
+  kable()
+```
+
+---
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 dbDisconnect(con)
 ```
 
 
-
-```{r}
-# WITH profesores_carreras AS (
-#   SELECT p.nombre_completo, c.nombre_carrera, cu.nombre_curso
-#   FROM profesores p
-#   JOIN cursos_profesores cp ON p.id_profesor = cp.id_profesor
-#   JOIN cursos cu ON cu.id_curso = cp.id_curso
-#   JOIN carreras c ON c.id_carrera = cu.id_carrera
-#   GROUP BY p.nombre_completo, c.nombre_carrera, cu.nombre_curso
-#   HAVING COUNT(DISTINCT c.id_carrera) = 2
-# )
-# SELECT pc.nombre_completo, pc.nombre_curso, pc.nombre_carrera
-# FROM profesores_carreras pc
-# JOIN cursos_profesores cp ON cp.id_curso = (SELECT id_curso FROM cursos WHERE nombre_curso = pc.nombre_curso)
-# JOIN profesores p ON p.id_profesor = cp.id_profesor
-# ORDER BY pc.nombre_completo, pc.nombre_curso;
-
-# ibrary(dplyr)
-# 
-# profesores_carreras <- inner_join(
-#   inner_join(
-#     inner_join(
-#       profesores, cursos_profesores, by = "id_profesor"
-#     ), cursos, by = "id_curso"
-#   ), carreras, by = "id_carrera"
-# ) %>% 
-#   group_by(nombre_completo, nombre_carrera, nombre_curso) %>% 
-#   summarise(count = n_distinct(id_carrera)) %>% 
-#   filter(count == 2) %>% 
-#   select(-count)
-# 
-# resultados <- inner_join(
-#   inner_join(
-#     profesores_carreras, cursos_profesores, by = "nombre_curso"
-#   ), profesores, by = "id_profesor"
-# ) %>% 
-#   select(nombre_completo, nombre_curso, nombre_carrera) %>% 
-#   arrange(nombre_completo, nombre_curso)
-
-```
 
