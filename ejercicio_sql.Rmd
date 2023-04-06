@@ -178,7 +178,8 @@ ORDER by PROFESOR, CARRERA;
 
 ```
 
-## Respuesta
+## Resultado
+
 ```{r echo=FALSE, paged.print=TRUE}
 
 tbl(con, "CALENDARIO_CURSOS") |> 
@@ -199,6 +200,50 @@ tbl(con, "CALENDARIO_CURSOS") |>
 ```
 
 ---
+
+# Punto E
+
+> Listar los estudiantes que se han inscrito a un curso determinado. Se deben obtener los siguientes datos: el nombre completo del estudiante y el nombre del curso.
+
+## Query
+
+***NOTA:*** Es posible sustituir el nombre del curso deseado en la cláusula `WHERE` para encontrar a los estudiantes que se hayan matriculado en él.
+
+```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
+
+SELECT DISTINCT 
+    USUARIOS.NOMBRE|| ' ' ||APELLIDO AS ESTUDIANTE,
+    CURSOS.NOMBRE AS CURSO
+FROM CURSOS_ESTUDIANTES
+JOIN CALENDARIO_CURSOS
+    ON CURSOS_ESTUDIANTES.ID_CALENDARIO = CALENDARIO_CURSOS.ID_CALENDARIO
+JOIN CURSOS
+    ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
+JOIN USUARIOS
+    ON CURSOS_ESTUDIANTES.ID_USUARIO = USUARIOS.ID_USUARIO
+WHERE CURSOS.NOMBRE = 'Cálculo Diferencial'
+ORDER BY ESTUDIANTE;
+
+```
+
+## Resultado
+
+```{r echo=FALSE, paged.print=TRUE}
+
+tbl(con, "CURSOS_ESTUDIANTES") |> 
+  left_join(tbl(con, "CALENDARIO_CURSOS"), by = "ID_CALENDARIO") |>
+  left_join(tbl(con, "CURSOS"), by = "ID_CURSO") |> 
+  left_join(tbl(con, "USUARIOS"), by = "ID_USUARIO") |> 
+  select(NOMBRE.y, APELLIDO, NOMBRE.x) |>
+  rename(NOMBRE = NOMBRE.y,
+         CURSO = NOMBRE.x) |>  
+  collect() |> 
+  unite(ESTUDIANTE, c(NOMBRE, APELLIDO), sep = " ") |> 
+  distinct() |> 
+  filter(CURSO == "Cálculo Diferencial") |> 
+  arrange(ESTUDIANTE) |> 
+  kable()
+```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 dbDisconnect(con)
