@@ -56,7 +56,7 @@ $\\ \\ \\$
 
 SELECT DISTINCT
     cursos.nombre AS curso,
---- Se concatenan nombre completo del profesor, el edificio/salón y la hora de inicio y fin.
+/* Se concatenan nombre completo del profesor, el edificio/salón y la hora de inicio y fin. */ 
     usuarios.nombre || ' ' || apellido AS profesor,
     'Ed. ' || edificios.nombre || ' Salon ' || salones.nombre AS salon,
     calendario_cursos.dia,
@@ -74,9 +74,9 @@ JOIN salones
     ON calendario_cursos.id_salon = salones.id_salon
 JOIN edificios
     ON salones.id_edificio = edificios.id_edificio
---- Filtrando por la carrera requerida
+/* Filtrando por la carrera requerida */
 WHERE carreras.nombre = 'Ingeniería de Sistemas'
---- Ordenando por nombre del curso para facilitar la lectura
+/*  Ordenando por nombre del curso para facilitar la lectura */
 ORDER BY cursos.nombre;
 
 ```
@@ -107,13 +107,15 @@ tbl(con, "CALENDARIO_CURSOS") |>
   distinct() |> 
   arrange(CURSO) |> 
   kable("latex", booktabs=T, linesep = "") |> 
-  kableExtra::kable_styling(font_size = 8,
+  kableExtra::kable_styling(font_size = 7,
                             bootstrap_options = "bordered",
                             position = "center", 
                             latex_options = "HOLD_position")
 ```
 
 ---
+
+$\\ \\$
 
 # Punto B
 
@@ -124,7 +126,7 @@ tbl(con, "CALENDARIO_CURSOS") |>
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
 SELECT DISTINCT
---- Se concatenan nombre completo del profesor.
+/* Se concatenan nombre completo del profesor. */
     usuarios.nombre || ' ' || apellido AS profesor,
     cursos.nombre AS curso
 FROM calendario_cursos
@@ -134,9 +136,9 @@ JOIN facultades
     ON cursos.id_facultad = facultades.id_facultad
 JOIN usuarios
     ON calendario_cursos.id_profesor = usuarios.id_usuario
---- Filtrando por la facultad requerida
+/* Filtrando por la facultad requerida */
 WHERE facultades.nombre = 'Humanidades y Ciencias Sociales'
---- Ordenando por profesor para facilitar la lectura
+/* Ordenando por profesor para facilitar la lectura */
 ORDER BY profesor;
 
 ```
@@ -171,7 +173,7 @@ tbl(con, "CALENDARIO_CURSOS") |>
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
 WITH p2c AS(
---- El subquery p2c contiene aquellos profesores que dictan en 2 carreras
+/* El subquery p2c contiene aquellos profesores que dictan en 2 carreras */
     SELECT DISTINCT
       usuarios.id_usuario,
       usuarios.nombre,
@@ -188,9 +190,9 @@ WITH p2c AS(
     GROUP BY usuarios.id_usuario, usuarios.nombre, apellido
        HAVING COUNT(DISTINCT carreras.id_carrera) = 2
 )
---- Una vez con los profesores identificados se adiciona curso y carreras
+/* Una vez con los profesores identificados se adiciona curso y carreras */
 SELECT DISTINCT
---- Se concatenan nombre completo del profesor.
+/* Se concatenan nombre completo del profesor. */
     p2c.nombre || ' ' || p2c.apellido AS profesor,
     cursos.nombre AS curso,
     carreras.nombre AS carrera
@@ -203,7 +205,7 @@ JOIN cursos_carreras
     ON cursos.id_curso = cursos_carreras.id_curso
 JOIN carreras
     ON cursos_carreras.id_carrera = carreras.id_carrera
---- Ordenando por profesor y carrera para facilitar la lectura
+/* Ordenando por profesor y carrera para facilitar la lectura */
 ORDER by profesor, carrera;
 
 ```
@@ -243,8 +245,8 @@ tbl(con, "CALENDARIO_CURSOS") |>
 
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
---- En esta primera parte se identifican todos los cursos a los cuales pueden acceder
---- los estudiantes de acuerdo al semestre en el que se encuentran
+/* En esta primera parte se identifican todos los cursos a los cuales pueden acceder
+los estudiantes de acuerdo al semestre en el que se encuentran */
 SELECT DISTINCT
     cursos.nombre as curso,
     carreras.nombre carrera,
@@ -259,8 +261,8 @@ JOIN cursos_carreras
     AND usuarios.semestre >= cursos_carreras.semestre
 JOIN cursos
     ON cursos_carreras.id_curso = cursos.id_curso
---- Usando NOT EXISTS quitamos de la lista de cursos que puede matricular los 
---- estudiantes aquellos cursos en los que ya se encuentran matriculados
+/* Usando NOT EXISTS quitamos de la lista de cursos que puede matricular los 
+estudiantes aquellos cursos en los que ya se encuentran matriculados */ 
 WHERE NOT EXISTS (
     SELECT null
     FROM cursos_estudiantes
@@ -269,11 +271,11 @@ WHERE NOT EXISTS (
     WHERE cursos_estudiantes.id_usuario = usuarios.id_usuario
         AND calendario_cursos.id_curso = cursos_carreras.id_curso
 ) 
---- Filtramos por nombre y apellido del estudiante del que deseamos ver qué cursos tiene
---- tiene disponibles para matricular
+/* Filtramos por nombre y apellido del estudiante del que deseamos ver qué cursos tiene
+tiene disponibles para matricular */
     AND usuarios.nombre = 'Olive'
     AND usuarios.apellido =  'Stone'
---- Ordenando por curso y semestre para facilitar la lectura.
+/* Ordenando por curso y semestre para facilitar la lectura. */
 ORDER BY cursos_carreras.semestre;
 
 ```
@@ -320,7 +322,7 @@ $\\$
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
 SELECT DISTINCT 
---- Se concatena nombre completo del estudiante.
+/* Se concatena nombre completo del estudiante. */
     usuarios.nombre || ' ' || apellido AS estudiante,
     cursos.nombre AS curso
 FROM cursos_estudiantes
@@ -330,9 +332,9 @@ JOIN cursos
     ON calendario_cursos.id_curso = cursos.id_curso
 JOIN usuarios
     ON cursos_estudiantes.id_usuario = usuarios.id_usuario
---- Se filtrta por el curso del cual queremos ver la lista de estudiantes
+/* Se filtrta por el curso del cual queremos ver la lista de estudiantes */
 WHERE cursos.nombre = 'Cálculo Diferencial'
---- Ordenando por estudiante para facilitar la lectura.
+/* Ordenando por estudiante para facilitar la lectura. */
 ORDER BY estudiante;
 
 ```
