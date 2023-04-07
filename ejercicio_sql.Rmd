@@ -1,6 +1,9 @@
 ---
-title: "SQL Excercise"
-author: "Camilo Vega"
+title:  'Ejercicio Oracle Database'
+author:
+  - José Julián Barbosa Ayala
+  - Michael Hernández Vera
+  - Camilo Vega Ramírez
 output:
   pdf_document:
     latex_engine: xelatex
@@ -11,6 +14,7 @@ linkcolor: blue
 header-includes:
   - \usepackage{fontspec}
   - \setmonofont{Consolas}
+  - \renewcommand{\and}{\\}
 ---
 
 ```{r setup, include=FALSE}
@@ -23,6 +27,7 @@ library(tidyverse)
 library(ggplot2)
 library(odbc)
 library(knitr)
+library(kableExtra)
 
 con <- DBI::dbConnect(odbc::odbc(),
                       Driver   = "MySQL ODBC 8.0 Unicode Driver",
@@ -34,37 +39,45 @@ con <- DBI::dbConnect(odbc::odbc(),
 
 ```
 
----
+\newpage
+
+$\\ \\ \\$
 
 # Punto A
 
-> Listar todos los cursos ofrecidos en la carrera de Ingeniería de Sistemas. Para este caso se debe tener en cuenta que un mismo curso puede ser dictado por profesores diferentes, en salones diferentes y en horarios diferentes. Se deben obtener los siguientes datos: el nombre del curso, el nombre completo del profesor que dicta el curso, el salón en que se dicta el curso y la hora en la que se dicta del curso.
+> *Listar todos los cursos ofrecidos en la carrera de Ingeniería de Sistemas. Para este caso se debe tener en cuenta que un mismo curso puede ser dictado por profesores diferentes, en salones diferentes y en horarios diferentes. Se deben obtener los siguientes datos: el nombre del curso, el nombre completo del profesor que dicta el curso, el salón en que se dicta el curso y la hora en la que se dicta del curso.*
 
 
 ## Query
 
-***NOTA:*** Se utiliza la cláusula `DISTINCT` en el QUERY para obtener valores únicos, dado que en los datos actuales los cursos que se dictan en distintos días tienen el mismo horario. Si en el futuro esta situación cambia  se recomienda incluir el campo DIA en la consulta, y eliminar la cláusula `DISTINCT`."
+***NOTA:*** Es importante señalar que, aunque en el enunciado no se menciona, se ha decidido incluir la columna `DIA` en la consulta. Aunque en la actualidad todos los cursos tienen el mismo horario independientemente del día en que se dicten, es posible que en el futuro esto cambie con la implementación de nuevos calendarios de cursos. Al agregar la columna `DIA`, se prevé esta posible situación y se garantiza la flexibilidad necesaria para adaptarse a los cambios futuros.
 
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
 SELECT DISTINCT
-    CURSOS.NOMBRE AS CURSO,
-    USUARIOS.NOMBRE|| ' ' ||APELLIDO AS PROFESOR,
-    SALONES.NOMBRE AS SALON,
-    HORA_INICIO || ' a ' || HORA_FIN AS HORARIO
-FROM CALENDARIO_CURSOS
-JOIN CURSOS
-    ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
-JOIN CURSOS_CARRERAS
-    ON CURSOS.ID_CURSO = CURSOS_CARRERAS.ID_CURSO
-JOIN CARRERAS
-    ON CURSOS_CARRERAS.ID_CARRERA = CARRERAS.ID_CARRERA
-JOIN USUARIOS
-    ON CALENDARIO_CURSOS.ID_PROFESOR = USUARIOS.ID_USUARIO
-JOIN SALONES
-    ON CALENDARIO_CURSOS.ID_SALON = SALONES.ID_SALON
-WHERE CARRERAS.NOMBRE = 'Ingeniería de Sistemas'
-ORDER BY CURSOS.NOMBRE;
+    cursos.nombre AS curso,
+--- Se concatenan nombre completo del profesor, el edificio/salón y la hora de inicio y fin.
+    usuarios.nombre || ' ' || apellido AS profesor,
+    'Ed. ' || edificios.nombre || ' Salon ' || salones.nombre AS salon,
+    calendario_cursos.dia,
+    hora_inicio || ' a ' || hora_fin AS horario
+FROM calendario_cursos
+JOIN cursos
+    ON calendario_cursos.id_curso = cursos.id_curso
+JOIN cursos_carreras
+    ON cursos.id_curso = cursos_carreras.id_curso
+JOIN carreras
+    ON cursos_carreras.id_carrera = carreras.id_carrera
+JOIN usuarios
+    ON calendario_cursos.id_profesor = usuarios.id_usuario
+JOIN salones
+    ON calendario_cursos.id_salon = salones.id_salon
+JOIN edificios
+    ON salones.id_edificio = edificios.id_edificio
+--- Filtrando por la carrera requerida
+WHERE carreras.nombre = 'Ingeniería de Sistemas'
+--- Ordenando por nombre del curso para facilitar la lectura
+ORDER BY cursos.nombre;
 
 ```
 
@@ -79,41 +92,52 @@ tbl(con, "CALENDARIO_CURSOS") |>
   left_join(tbl(con, "CARRERAS"), by = "ID_CARRERA") |> 
   left_join(tbl(con, "USUARIOS"), by = c("ID_PROFESOR" = "ID_USUARIO")) |> 
   left_join(tbl(con, "SALONES"), by = "ID_SALON") |> 
+  left_join(tbl(con, "EDIFICIOS"), by = "ID_EDIFICIO") |> 
   filter(ID_CARRERA == 1) |> 
-  select(NOMBRE.x, NOMBRE.x.x, APELLIDO, NOMBRE.y.y, HORA_INICIO, HORA_FIN) |>
+  select(NOMBRE.x, NOMBRE.x.x, APELLIDO, NOMBRE, NOMBRE.y.y, DIA, HORA_INICIO, HORA_FIN) |>
   rename(CURSO = NOMBRE.x, 
          NOMBRE_PROFESOR = NOMBRE.x.x,
          APELLIDO_PROFESOR = APELLIDO,
          SALON = NOMBRE.y.y) |> collect() |> 
+  mutate(NOMBRE = str_c("Ed. ", NOMBRE),
+         SALON = str_c("Salon ", SALON)) |> 
   unite(PROFESOR, c(NOMBRE_PROFESOR, APELLIDO_PROFESOR), sep = " ") |> 
+  unite(SALON, c(NOMBRE, SALON), sep = " ") |> 
   unite(HORARIO, c(HORA_INICIO, HORA_FIN), sep = " a ") |> 
   distinct() |> 
   arrange(CURSO) |> 
-    kable()
+  kable("latex", booktabs=T, linesep = "") |> 
+  kableExtra::kable_styling(font_size = 8,
+                            bootstrap_options = "bordered",
+                            position = "center", 
+                            latex_options = "HOLD_position")
 ```
 
 ---
 
 # Punto B
 
-> Obtener la lista de profesores que dictan cursos pertenecientes a la facultad de Humanidades. Se deben obtener los siguientes datos: el nombre completo del profesor y el nombre del curso que dicta.
+> *Obtener la lista de profesores que dictan cursos pertenecientes a la facultad de Humanidades. Se deben obtener los siguientes datos: el nombre completo del profesor y el nombre del curso que dicta.*
 
 ## Query
 
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
 SELECT DISTINCT
-    USUARIOS.NOMBRE|| ' ' ||APELLIDO AS PROFESOR,
-    CURSOS.NOMBRE AS CURSO
-FROM CALENDARIO_CURSOS
-JOIN CURSOS
-    ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
-JOIN FACULTADES
-    ON CURSOS.ID_FACULTAD = FACULTADES.ID_FACULTAD
-JOIN USUARIOS
-    ON CALENDARIO_CURSOS.ID_PROFESOR = USUARIOS.ID_USUARIO
-WHERE FACULTADES.NOMBRE = 'Humanidades y Ciencias Sociales'
-ORDER BY PROFESOR;
+--- Se concatenan nombre completo del profesor.
+    usuarios.nombre || ' ' || apellido AS profesor,
+    cursos.nombre AS curso
+FROM calendario_cursos
+JOIN cursos
+    ON calendario_cursos.id_curso = cursos.id_curso
+JOIN facultades
+    ON cursos.id_facultad = facultades.id_facultad
+JOIN usuarios
+    ON calendario_cursos.id_profesor = usuarios.id_usuario
+--- Filtrando por la facultad requerida
+WHERE facultades.nombre = 'Humanidades y Ciencias Sociales'
+--- Ordenando por profesor para facilitar la lectura
+ORDER BY profesor;
 
 ```
 
@@ -131,50 +155,56 @@ tbl(con, "CALENDARIO_CURSOS") |>
   rename(CURSO = NOMBRE.x) |> collect() |> 
   unite(PROFESOR, c(NOMBRE, APELLIDO), sep = " ") |> 
   arrange(PROFESOR) |> 
-    kable()
+  kable("latex", booktabs=T, linesep = "") |> 
+  kableExtra::kable_styling(position = "center",
+                            latex_options = "HOLD_position")
 ```
 
 ---
 
 # Punto C
 
-> Obtener la lista de profesores que dictan cursos en **dos** carreras diferentes. Se deben obtener los siguientes datos: el nombre completo del profesor, el nombre del curso que dicta y el nombre de la carrera a la que pertenece el curso. Pista: averigua cómo funciona la sentencia **WITH**.
+> *Obtener la lista de profesores que dictan cursos en **dos** carreras diferentes. Se deben obtener los siguientes datos: el nombre completo del profesor, el nombre del curso que dicta y el nombre de la carrera a la que pertenece el curso. Pista: averigua cómo funciona la sentencia **WITH**.*
 
 ## Query
 
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
 WITH p2c AS(
+--- El subquery p2c contiene aquellos profesores que dictan en 2 carreras
     SELECT DISTINCT
-      USUARIOS.ID_USUARIO,
-      USUARIOS.NOMBRE,
-      APELLIDO
-    FROM CALENDARIO_CURSOS
-    JOIN CURSOS
-      ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
-    JOIN CURSOS_CARRERAS
-      ON CALENDARIO_CURSOS.ID_CURSO = CURSOS_CARRERAS.ID_CURSO
-    JOIN CARRERAS
-      ON CURSOS_CARRERAS.ID_CARRERA = CARRERAS.ID_CARRERA
-    JOIN USUARIOS
-      ON CALENDARIO_CURSOS.ID_PROFESOR = USUARIOS.ID_USUARIO
-    GROUP BY USUARIOS.ID_USUARIO, USUARIOS.NOMBRE, APELLIDO
-       HAVING COUNT(DISTINCT CARRERAS.ID_CARRERA) = 2
+      usuarios.id_usuario,
+      usuarios.nombre,
+      apellido
+    FROM calendario_cursos
+    JOIN cursos
+      ON calendario_cursos.id_curso = cursos.id_curso
+    JOIN cursos_carreras
+      ON calendario_cursos.id_curso = cursos_carreras.id_curso
+    JOIN carreras
+      ON cursos_carreras.id_carrera = carreras.id_carrera
+    JOIN usuarios
+      ON calendario_cursos.id_profesor = usuarios.id_usuario
+    GROUP BY usuarios.id_usuario, usuarios.nombre, apellido
+       HAVING COUNT(DISTINCT carreras.id_carrera) = 2
 )
+--- Una vez con los profesores identificados se adiciona curso y carreras
 SELECT DISTINCT
-    p2c.NOMBRE|| ' ' ||p2c.APELLIDO AS PROFESOR,
-    CURSOS.NOMBRE AS CURSO,
-    CARRERAS.NOMBRE AS CARRERA
+--- Se concatenan nombre completo del profesor.
+    p2c.nombre || ' ' || p2c.apellido AS profesor,
+    cursos.nombre AS curso,
+    carreras.nombre AS carrera
 FROM p2c
-JOIN CALENDARIO_CURSOS
-    ON p2c.ID_USUARIO = CALENDARIO_CURSOS.ID_PROFESOR
-JOIN CURSOS
-    ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
-JOIN CURSOS_CARRERAS
-    ON CURSOS.ID_CURSO = CURSOS_CARRERAS.ID_CURSO
-JOIN CARRERAS
-    ON CURSOS_CARRERAS.ID_CARRERA = CARRERAS.ID_CARRERA
-ORDER by PROFESOR, CARRERA;
+JOIN calendario_cursos
+    ON p2c.id_usuario = calendario_cursos.id_profesor
+JOIN cursos
+    ON calendario_cursos.id_curso = cursos.id_curso
+JOIN cursos_carreras
+    ON cursos.id_curso = cursos_carreras.id_curso
+JOIN carreras
+    ON cursos_carreras.id_carrera = carreras.id_carrera
+--- Ordenando por profesor y carrera para facilitar la lectura
+ORDER by profesor, carrera;
 
 ```
 
@@ -196,14 +226,92 @@ tbl(con, "CALENDARIO_CURSOS") |>
   group_by(PROFESOR) |> 
   filter(n_distinct(CARRERA) == 2) |> 
   arrange(PROFESOR, CARRERA) |> 
-  kable()
+  kable("latex", booktabs=T, linesep = "") |> 
+  kableExtra::kable_styling(position = "center",
+                            latex_options = "HOLD_position")
 ```
 
 ---
 
+# Punto D
+
+> *Para un estudiante en particular, obtener el listado de cursos que puede matricular. Para este caso particular se debe tener en cuenta que los cursos se dictan en semestres diferentes, pertenecen a carreras diferentes y un estudiante no puede matricular un curso que ya se encuentre matriculado. Se deben obtener los siguientes datos: el nombre del curso, el nombre de la carrera a la que pertenece y el semestre en el que se ubica. Pista: averigua el uso de la sentencia **NOT EXISTS**.*
+
+## Query
+
+***NOTA:*** Este query asume que un estudiante solo puede matricular cursos de su carrera que sean de un semestre igual o anterior al que actualmente está cursando. La lista muestra únicamente los cursos disponibles en los que el estudiante seleccionado no se encuentra ya matriculado. Para encontrar los cursos disponibles para un estudiante en particular, simplemente sustituir su nombre y apellido en la cláusula `WHERE` al final del query.
+
+```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
+
+--- En esta primera parte se identifican todos los cursos a los cuales pueden acceder
+--- los estudiantes de acuerdo al semestre en el que se encuentran
+SELECT DISTINCT
+    cursos.nombre as curso,
+    carreras.nombre carrera,
+    cursos_carreras.semestre
+FROM usuarios    
+JOIN carreras_estudiantes
+    ON usuarios.id_usuario = carreras_estudiantes.id_usuario
+JOIN carreras
+    ON carreras_estudiantes.id_carrera = carreras.id_carrera
+JOIN cursos_carreras
+    ON carreras.id_carrera = cursos_carreras.id_carrera 
+    AND usuarios.semestre >= cursos_carreras.semestre
+JOIN cursos
+    ON cursos_carreras.id_curso = cursos.id_curso
+--- Usando NOT EXISTS quitamos de la lista de cursos que puede matricular los 
+--- estudiantes aquellos cursos en los que ya se encuentran matriculados
+WHERE NOT EXISTS (
+    SELECT null
+    FROM cursos_estudiantes
+    JOIN calendario_cursos
+        ON cursos_estudiantes.id_calendario = calendario_cursos.id_calendario
+    WHERE cursos_estudiantes.id_usuario = usuarios.id_usuario
+        AND calendario_cursos.id_curso = cursos_carreras.id_curso
+) 
+--- Filtramos por nombre y apellido del estudiante del que deseamos ver qué cursos tiene
+--- tiene disponibles para matricular
+    AND usuarios.nombre = 'Olive'
+    AND usuarios.apellido =  'Stone'
+--- Ordenando por curso y semestre para facilitar la lectura.
+ORDER BY cursos_carreras.semestre;
+
+```
+
+## Resultado
+```{r echo=FALSE, paged.print=TRUE}
+tbl(con, "usuarios") |> 
+  inner_join(tbl(con, "carreras_estudiantes"), by = "ID_USUARIO") |>
+  inner_join(tbl(con, "carreras"), by = "ID_CARRERA") |> 
+  inner_join(tbl(con, "cursos_carreras"), by = c("ID_CARRERA")) |> 
+  filter(SEMESTRE.x >= SEMESTRE.y) |> 
+  inner_join(tbl(con, "cursos"), by = c("ID_CURSO")) |> 
+  select(NOMBRE, NOMBRE.y, SEMESTRE.y, ID_USUARIO, ID_CURSO) |> 
+  collect() |> 
+  distinct() |> 
+  anti_join(tbl(con, "cursos_estudiantes") |> 
+  inner_join(tbl(con, "calendario_cursos"), by = "ID_CALENDARIO") |> 
+  select(ID_USUARIO, ID_CURSO) |> 
+  collect() |> 
+  distinct(),
+  by = c("ID_USUARIO", "ID_CURSO")) |> 
+  filter(ID_USUARIO == 11) |> 
+  arrange(SEMESTRE.y) |> 
+  select(-ID_USUARIO, -ID_CURSO) |> 
+  set_names(c("CURSO", "CARRERA", "SEMESTRE")) |> 
+  kable("latex", booktabs=T, linesep = "") |> 
+  kableExtra::kable_styling(position = "center",
+                            latex_options = "HOLD_position")
+```
+
+
+---
+
+$\\$
+
 # Punto E
 
-> Listar los estudiantes que se han inscrito a un curso determinado. Se deben obtener los siguientes datos: el nombre completo del estudiante y el nombre del curso.
+> *Listar los estudiantes que se han inscrito a un curso determinado. Se deben obtener los siguientes datos: el nombre completo del estudiante y el nombre del curso.*
 
 ## Query
 
@@ -212,17 +320,20 @@ tbl(con, "CALENDARIO_CURSOS") |>
 ```{sql message=FALSE, warning=FALSE, connection=con, eval=FALSE, font.family = "Consolas"}
 
 SELECT DISTINCT 
-    USUARIOS.NOMBRE|| ' ' ||APELLIDO AS ESTUDIANTE,
-    CURSOS.NOMBRE AS CURSO
-FROM CURSOS_ESTUDIANTES
-JOIN CALENDARIO_CURSOS
-    ON CURSOS_ESTUDIANTES.ID_CALENDARIO = CALENDARIO_CURSOS.ID_CALENDARIO
-JOIN CURSOS
-    ON CALENDARIO_CURSOS.ID_CURSO = CURSOS.ID_CURSO
-JOIN USUARIOS
-    ON CURSOS_ESTUDIANTES.ID_USUARIO = USUARIOS.ID_USUARIO
-WHERE CURSOS.NOMBRE = 'Cálculo Diferencial'
-ORDER BY ESTUDIANTE;
+--- Se concatena nombre completo del estudiante.
+    usuarios.nombre || ' ' || apellido AS estudiante,
+    cursos.nombre AS curso
+FROM cursos_estudiantes
+JOIN calendario_cursos
+    ON cursos_estudiantes.id_calendario = calendario_cursos.id_calendario
+JOIN cursos
+    ON calendario_cursos.id_curso = cursos.id_curso
+JOIN usuarios
+    ON cursos_estudiantes.id_usuario = usuarios.id_usuario
+--- Se filtrta por el curso del cual queremos ver la lista de estudiantes
+WHERE cursos.nombre = 'Cálculo Diferencial'
+--- Ordenando por estudiante para facilitar la lectura.
+ORDER BY estudiante;
 
 ```
 
@@ -242,8 +353,14 @@ tbl(con, "CURSOS_ESTUDIANTES") |>
   distinct() |> 
   filter(CURSO == "Cálculo Diferencial") |> 
   arrange(ESTUDIANTE) |> 
-  kable()
+  kable("latex", booktabs=T, linesep = "") |> 
+  kableExtra::kable_styling(position = "center",
+                            latex_options = "HOLD_position")
 ```
+
+
+
+
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 dbDisconnect(con)
