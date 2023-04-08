@@ -1,13 +1,21 @@
 ---
 title: "Modelo Lineal Simple"
 author: "Camilo Vega"
-date: "2023-04-01"
-output: pdf_document
+output: 
+    pdf_document:
+        latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+Este documento presenta un análisis destinado a la construcción de un modelo lineal simple utilizando los datos del dataframe "vivienda4" del paquete "paqueteMET". El objetivo es determinar el modelo más adecuado para explicar la relación entre los metros cuadrados de una vivienda y su precio en millones de pesos colombianos.
+
+
+# Carga de librerias y funciones personalizadas
+
+En este análisis, se utilizan las librería listadas en el siguiente código. Además, para facilitar la creación de visualizaciones, se emplean las funciones personalizadas, las cuales se encuentran en el archivo funciones_personalizadas.R.
 
 ```{r message=FALSE, warning=FALSE}
 # Carga de paquetes necesarios para el código
@@ -20,20 +28,32 @@ library(paqueteMET) # Paquete para el análisis de series temporales
 library(skimr) # Paquete para el análisis exploratorio de datos
 library(knitr) # Paquete para creación de tablas en formato de salida
 library(bestNormalize) # Busca la mejor transformación para noralización
-library(rlang)
-library(broom)
-library(qqplotr) 
-library(gridExtra)
-library(grid)
+library(rlang) # Conjunto de herramientas para programación en R
+library(broom) # Convierte resultados de modelos en tablas y gráficos
+library(qqplotr) # Paquete para gráficos QQ-plot
+library(gridExtra) # Paquete para la combinación de gráficos
+library(grid) # Paquete para la manipulación de grillas de gráficos
+library(tidymodels) # Conjunto de paquetes para modelado estadístico
+library(multilevelmod) # Paquete para ajuste de modelos de efectos mixtos
 
 # Se crea un objeto "datos_vivienda" que contiene los datos de vivienda4
 datos_vivienda <- vivienda4
 
+# Carga de funciones personalizadas
 source("funciones_personalizadas.R")
     
 ```
 
+# Ingenieria de caracteristicas
+
+Teniendo en cuenta las recomendaciones del análisis exploratorio inicial detallado en el documento `analisis_exploratorio.pdf`, se han realizado las siguientes transformaciones en los datos del dataframe `vivienda4` para construir un modelo lineal simple adecuado.
+
+## Filtrado
+
+Se ha llevado a cabo un filtrado de los datos del dataframe para incluir únicamente aquellos que corresponden a apartamentos ubicados en la zona sur. De esta manera, se podrá trabajar exclusivamente con la información relevante para el análisis y construcción del modelo lineal simple.
+
 ```{r}
+#Filtrado zona, tipo
 datos_vivienda_mod <- datos_vivienda |> 
     filter(zona == "Zona Sur",
            tipo == "Apartamento")
@@ -41,50 +61,84 @@ datos_vivienda_mod <- datos_vivienda |>
 ```
 
 
+## Transformación de datos
+
+Para transformar los datos y lograr una aproximación lo más cercana posible a una distribución normal, se utilizará el paquete de R llamado `bestNormalize.` De esta manera, se podrá mejorar la calidad del análisis y la construcción del modelo lineal simple.
+
+### Transformación preciom
+
+
 ```{r}
 
+# Fijar la semilla para reproducibilidad
 set.seed(4321)
+
+# Aplicar bestNormalize a los datos de precios de vivienda
 norm_preciom <- bestNormalize(datos_vivienda_mod$preciom, allow_orderNorm = FALSE)
 
+# Observar la mejor transformación
 norm_preciom$chosen_transform
-
-
 ```
 
-```{r}
-
-set.seed(4321)
-norm_areaconst <- bestNormalize(datos_vivienda_mod$areaconst, allow_orderNorm = FALSE)
-
-norm_areaconst$chosen_transform
-
-```
-
-
+Luego de aplicar diferentes métodos de transformación en la variable `norm_preciom` se ha determinado que la mejor opción es el método de Box Cox, con un valor de $\lambda$ de -0.567132. Esta información puede ser representada mediante la siguiente fórmula:
 
 \[ 
-y(\lambda) = \begin{cases}
-\frac{y^{\lambda} - 1}{\lambda}, & \text{if } \lambda \neq 0 \\
-\ln(y), & \text{if } \lambda = 0
-\end{cases}
+norm\_preciom\_mod = 
+\frac{y^{-0.567132} - 1}{-0.567132}
 \]
 
+Se procede a graficar la distribución resultante y a calcular las medidas de resumen correspondientes. De esta manera, se podrá visualizar y comprender mejor la distribución de los datos transformados.
 
-```{r}
+```{r fig.height=2}
+# Agregando preciom_mod al a los datos
 datos_vivienda_mod <- datos_vivienda_mod |>
-    mutate(preciom_mod = norm_preciom$x.t,
-           areaconst_mod = norm_areaconst$x.t)
-```
+    mutate(preciom_mod = norm_preciom$x.t)
 
-```{r}
+# Grafica de densidad y tabla de resumen
 gg_rain_cloud(
     datos_vivienda_mod, 
     preciom_mod); summary_table(
         datos_vivienda_mod, 
         preciom_mod)
+
 ```
 
+Al observar las medidas de tendencia central de la distribución transformada, se puede apreciar que se acercan a cero y que la asimetría desaparece. Sin embargo, es importante mencionar que la transformación de Box Cox hace más evidente la presencia de una bimodalidad en los datos, lo que sugiere que hay variables que no han sido consideradas y que pueden estar afectando la variable en cuestión.
+
+
+### Transformación areaconst
+
+
+
 ```{r}
+# Fijar la semilla para reproducibilidad
+set.seed(4321)
+
+# Aplicar bestNormalize a los datos de área de vivienda
+norm_areaconst <- bestNormalize(datos_vivienda_mod$areaconst, allow_orderNorm = FALSE)
+
+# Observar la mejor transformación
+norm_areaconst$chosen_transform
+
+```
+
+Luego de aplicar diferentes métodos de transformación en la variable `areaconst` se ha determinado que la mejor opción es el método de Box Cox, con un valor de $\lambda$ de -0.9999576. Esta información puede ser representada mediante la siguiente fórmula:
+
+\[ 
+areaconst\_mod = 
+\frac{y^{-0.9999576} - 1}{-0.9999576}
+\]
+
+Se procede a graficar la distribución resultante y a calcular las medidas de resumen correspondientes. De esta manera, se podrá visualizar y comprender mejor la distribución de los datos transformados.
+
+
+```{r fig.height=2}
+
+# Agregando datos_vivienda_mod al a los datos
+datos_vivienda_mod <- datos_vivienda_mod |>
+    mutate(areaconst_mod = norm_areaconst$x.t)
+
+# Grafica de densidad y tabla de resumen
 gg_rain_cloud(
     datos_vivienda_mod, 
     areaconst_mod); summary_table(
@@ -92,216 +146,501 @@ gg_rain_cloud(
         areaconst_mod)
 ```
 
-```{r}
+Al observar las medidas de tendencia central de la distribución transformada, se puede apreciar que se acercan a cero y que la asimetría desaparece. Sin embargo, es importante mencionar que la transformación de Box Cox hace más evidente la presencia de una bimodalidad en los datos, lo que sugiere que hay variables que no han sido consideradas y que pueden estar afectando la variable en cuestión.
 
+# Construcción de Modelos iniciales
+
+En esta primera fase, se crearán un total de cuatro modelos lineales simples, los cuales se basarán en distintas combinaciones de transformaciones de los datos de precio y área, identificadas de la siguiente manera:
+
+* lin_lin: Precio sin transformar, Área sin transformar
+* lin_box: Precio sin transformar, Área transformada con el método de Box Cox
+* box_lin: Precio transformado con el método de Box Cox, Área sin transformar
+* box_box: Precio transformado con el método de Box Cox, Área transformada con el método de Box Cox
+
+Para cada una de las anteriores se aplicara el siguiente procedimiento:
+
+1. Producción de objetos en R para creación de modelo analisis del mismo.
+    + 1.A Creación de un data frame con los datos.
+    + 1.B Eliminación de outliers usando metodo de rango intercuartil ($\pm 1.5 * IQR$)
+    + 1.C Creación del modelo lineal simple.
+    + 1.D Creación tablas resumen del modelo (coeficientes, intervalos de confianza (95%), p-value coeficientes, p-value, $R^{2}$)
+    + 1.E Creación graficas supuesto residuales.
+    + 1.F Visualización del modelo.
+2. Interpretación del modelo.
+
+## lin_lin
+
+### Creación Objetos R lin_lin
+
+```{r message=FALSE, warning=FALSE}
+
+# Seleccionando datos y removiendo outliers
 datos_lin_lin <- datos_vivienda_mod |> 
     select(preciom, areaconst) |> 
     remove_outliers(preciom) |> 
     remove_outliers(areaconst)
 
+# Creando modelo
 lm_lin_lin <- lm(preciom ~ areaconst, datos_lin_lin) 
 
-glance(lm_lin_lin) |> 
+# Agregando al data frame datos del modelo
+datos_lin_lin_aug <- augment(lm_lin_lin) |> 
+  bind_cols(predict(lm_lin_lin, datos_lin_lin, interval = "prediction") |> 
+              as_tibble() |> 
+              select(-fit)) 
+
+# Tabla resumen modelo
+tll1 <- glance(lm_lin_lin) |> 
     mutate_all(~ round(.,4)) |> 
     select(-10, -2) |> 
-    kable() ; tidy(lm_lin_lin,
+    kable()
+
+# Tabla resumen coeficientes
+tll2 <- tidy(lm_lin_lin, 
                   conf.int = TRUE) |> 
     mutate(across(where(is.numeric), ~ round(.,4))) |> 
     kable()
 
+# Grafica modelo
+pll1 <- gg_lm_plot(datos_lin_lin_aug, areaconst, preciom, .fitted, lwr, upr)
+
 
 ```
+
+### Tablas y Graficas lin_lin
+
+```{r message=FALSE, warning=FALSE, fig.height=3.5}
+tll1; tll2; pll1; reg_analysis(
+  datos_lin_lin_aug)
+```
+
+### Interpretación modelo lin_lin
+
+Se observa que el intercepto no difiere significativamente de cero, lo cual es coherente ya que a medida que el área de una vivienda se aproxima a cero, su precio también tiende a disminuir.
+
+Respecto al coeficiente del área construida, se aprecia que el p-valor tiende a cero, lo que sugiere que existe una relación entre el área de una vivienda y su precio. Además, se observa que los valores del coeficiente son positivos, tanto para el valor del coeficiente como para los intervalos de confianza, lo que indica que a medida que aumenta el área de una vivienda, también lo hace su precio.
+
+En cuanto al coeficiente de determinación $R^{2}$, se puede notar que su valor no es muy alto, lo que indica que el modelo es capaz de explicar aproximadamente el 57% de la variación en los precios, igualmente el valor p del modelo tiende a cero lo cual nos indica que el modelo a pesar de no explicar en gran medida la variación se puede usar.
+
+Por último, se ha realizado un análisis gráfico en el que se ha observado que a medida que las predicciones son más altas, los residuos tienden a ser más dispersos. Además, se ha detectado la presencia de valores extremos que afectan la regresión y que generan residuos no normales en los valores extremos.
+
+## lin_box
+
+### Creación Objetos R lin_box
 
 ```{r message=FALSE, warning=FALSE}
-datos_lin_lin_aug <- augment(lm_lin_lin)
 
-reg_analysis(datos_lin_lin_aug)
-
-```
-
-```{r}
-
+# Seleccionando datos y removiendo outliers
 datos_lin_box <- datos_vivienda_mod |> 
     select(preciom, areaconst_mod) |> 
     remove_outliers(preciom) |> 
     remove_outliers(areaconst_mod)
 
+# Creando modelo
 lm_lin_box <- lm(preciom ~ areaconst_mod, datos_lin_box) 
 
-glance(lm_lin_box) |> 
+# Tabla resumen modelo
+tlb1 <- glance(lm_lin_box) |> 
     mutate_all(~ round(.,4)) |> 
     select(-10, -2) |> 
-    kable(); tidy(lm_lin_lin, 
-                  conf.int = TRUE) |> 
-    mutate(across(where(is.numeric), ~ round(.,4))) |> 
     kable()
 
+# Tabla resumen coeficientes
+tlb2 <-tidy(lm_lin_box,
+     conf.int = TRUE) |> 
+  mutate(across(where(is.numeric), ~ round(.,4))) |> 
+  kable()
+
+# Agregando al data frame datos del modelo
+datos_lin_box_aug <- augment(lm_lin_box) |> 
+  bind_cols(predict(lm_lin_box, datos_lin_box, interval = "prediction") |> 
+              as_tibble() |> 
+              select(-fit)) |> 
+    mutate(areaconst_rev = predict(norm_areaconst, areaconst_mod, inverse = TRUE))
+
+
+
+# Grafica modelo
+plb1 <- gg_lm_plot(datos_lin_box_aug, areaconst_rev, preciom, .fitted, lwr, upr)
 
 ```
+
+$\\$
+
+### Tablas y Graficas lin_box
+
+```{r message=FALSE, warning=FALSE, fig.height=3.5}
+tlb1; tlb2; plb1; reg_analysis(
+  datos_lin_box_aug)
+```
+
+### Interpretación modelo lin_box
+
+Debido a la transformación de los datos, los coeficientes del modelo pierden un poco de interpretabilidad ya que el área se encuentra en otra escala. No obstante, se puede notar que tanto el intercepto como el coeficiente del área tienen un valor p que tiende a cero, lo cual indica que la relación entre las variables se mantiene después de la transformación.
+
+Además, los intervalos de confianza del coeficiente del área sugieren una relación positiva con el precio. En cuanto al coeficiente de determinación $R^{2}$, este mejora ligeramente respecto al modelo sin transformaciones y su valor p sigue siendo cercano a 0.
+
+La gráfica del modelo muestra una tendencia logarítmica, lo que sugiere que la relación del área sobre el precio es alta al principio, pero a medida que el área aumenta, pierde efecto sobre el precio.
+
+Por último, en el análisis gráfico de los residuales, se puede observar que el efecto de los valores extremos que afectaban a la regresión ha desaparecido. Sin embargo, se sigue notando una tendencia en los residuales y su normalidad empeora especialmente en los valores altos.
+
+## box_lin
+
+### Creación Objetos R box_lin
 
 ```{r message=FALSE, warning=FALSE}
-datos_lin_box_aug <- augment(lm_lin_box)
 
-reg_analysis(datos_lin_box_aug)
-
-```
-
-```{r}
-
+# Seleccionando datos y removiendo outliers
 datos_box_lin <- datos_vivienda_mod |> 
     select(preciom_mod, areaconst) |> 
     remove_outliers(preciom_mod) |> 
     remove_outliers(areaconst)
 
+# Creando modelo
 lm_box_lin <- lm(preciom_mod ~ areaconst, datos_box_lin) 
 
-glance(lm_box_lin) |> 
+# Tabla resumen modelo
+tbl1 <- glance(lm_box_lin) |> 
     mutate_all(~ round(.,4)) |> 
     select(-10, -2) |> 
-    kable(); tidy(lm_box_lin, 
-                  conf.int = TRUE) |> 
-    mutate(across(where(is.numeric), ~ round(.,4))) |> 
     kable()
 
+# Tabla resumen coeficientes
+tbl2 <-  tidy(lm_box_lin, 
+     conf.int = TRUE) |> 
+  mutate(across(where(is.numeric), ~ round(.,4))) |> 
+  kable()
+
+# Agregando al data frame datos del modelo
+datos_box_lin_aug <- augment(lm_box_lin) |> 
+   bind_cols(predict(lm_box_lin, datos_box_lin, interval = "prediction") |> 
+              as_tibble() |> 
+              select(-fit)) |> 
+    mutate(preciom_rev = predict(norm_preciom, preciom_mod, inverse = TRUE),
+           .fitted_rev = predict(norm_preciom, .fitted, inverse = TRUE),
+         lwr_rev = predict(norm_preciom, lwr, inverse = TRUE),
+         upr_rev = predict(norm_preciom, upr, inverse = TRUE))
+
+# Grafica modelo
+pbl1 <- gg_lm_plot(datos_box_lin_aug, areaconst, preciom_rev, .fitted_rev, lwr_rev, upr_rev)
 
 ```
+
+### Tablas y Graficas box_lin
+
+```{r message=FALSE, warning=FALSE, fig.height=3.5}
+tbl1; tbl2; pbl1; reg_analysis(
+  datos_box_lin_aug)
+```
+
+### Interpretación modelo box_lin
+
+Debido a la transformación de los datos, los coeficientes del modelo pierden parte de su interpretabilidad, ya que el precio se encuentra en otra escala. Sin embargo, es posible observar que tanto el intercepto como el coeficiente del área tienen un valor p cercano a cero, lo que indica que la relación entre las variables se mantiene después de la transformación.
+
+Además, los intervalos de confianza del coeficiente del área sugieren una relación positiva con el precio. En cuanto al coeficiente de determinación $R^{2}$, este empeora con respecto al modelo sin transformaciones y su valor p sigue siendo cercano a 0.
+
+La gráfica del modelo muestra una tendencia exponencial, lo que sugiere que la relación del área sobre el precio es baja al principio, pero aumenta a medida que el área aumenta.
+
+Por último, en el análisis gráfico de los residuos, se puede observar que en comparación con el modelo sin transformaciones, la normalidad de los residuos mejora en los valores altos, pero siguen presentándose tendencias y valores extremos que afectan a la regresión.
+
+
+## box_box
+
+### Creación Objetos R box_box
 
 ```{r message=FALSE, warning=FALSE}
-datos_box_lin_aug <- augment(lm_box_lin)
 
-reg_analysis(datos_box_lin_aug)
-
-```
-
-
-```{r}
-
+# Seleccionando datos y removiendo outliers
 datos_box_box <- datos_vivienda_mod |> 
     select(preciom_mod, areaconst_mod) |> 
     remove_outliers(preciom_mod) |> 
     remove_outliers(areaconst_mod)
 
+# Creando modelo
 lm_box_box <- lm(preciom_mod ~ areaconst_mod, datos_box_box) 
 
-glance(lm_box_box) |> 
+# Tabla resumen modelo
+tbb1 <- glance(lm_box_box) |> 
     mutate_all(~ round(.,4)) |> 
     select(-10, -2) |> 
-    kable(); tidy(lm_box_box, 
-                  conf.int = TRUE) |> 
-    mutate(across(where(is.numeric), ~ round(.,4))) |> 
     kable()
 
+# Tabla resumen coeficientes
+tbb2 <- tidy(lm_box_box, 
+     conf.int = TRUE) |> 
+  mutate(across(where(is.numeric), ~ round(.,4))) |> 
+  kable()
+
+# Agregando al data frame datos del modelo
+datos_box_box_aug <- augment(lm_box_box) |> 
+  bind_cols(predict(lm_box_box, datos_box_box, interval = "prediction") |> 
+              as_tibble() |> 
+              select(-fit)) |> 
+  mutate(preciom_rev = predict(norm_preciom, preciom_mod, inverse = TRUE),
+         .fitted_rev = predict(norm_preciom, .fitted, inverse = TRUE),
+         areaconst_rev = predict(norm_areaconst, areaconst_mod, inverse = TRUE),
+         lwr_rev = predict(norm_preciom, lwr, inverse = TRUE),
+         upr_rev = predict(norm_preciom, upr, inverse = TRUE)) 
+
+# Grafica modelo
+pbb1 <- gg_lm_plot(datos_box_box_aug, areaconst_rev, preciom_rev, .fitted_rev, lwr_rev, upr_rev)
 
 ```
 
-```{r message=FALSE, warning=FALSE}
-datos_box_box_aug <- augment(lm_box_box)
+### Tablas y Graficas box_box
 
-reg_analysis(datos_box_box_aug)
+```{r message=FALSE, warning=FALSE, fig.height=3.5}
+tbb1; tbb2; pbb1; reg_analysis(
+  datos_box_box_aug)
+```
+
+### Interpretación modelo box_box
+
+Debido a la transformación de los datos, los coeficientes del modelo pierden parte de su interpretabilidad, ya que el precio y el área se encuentran en otra escala. Al realizar una transformación adicional, el intercepto deja de ser significativo y se aproxima a cero. En cuanto al coeficiente del área, su valor p tiende a cero, lo que indica una fuerte relación con el precio.
+
+Además, los intervalos de confianza del coeficiente del área sugieren una relación positiva con el precio. En cuanto al coeficiente de determinación $R^{2}$, este es el mejor de los cuatro modelos, con una explicación del 62% de la variabilidad del precio. Esto convierte al modelo en un buen candidato para inferencia.
+
+La gráfica del modelo muestra una tendencia logarítmica, lo que sugiere que la relación del área sobre el precio es alta al principio, pero disminuye a medida que el área aumenta.
+
+Por último, en el análisis gráfico de los residuos, se puede observar que todavía existen tendencias en los residuos, aunque son menos marcadas en comparación con los otros modelos. En cuanto a la normalidad de los residuos, esta solo es deficiente en los valores bajos. Además, se puede observar que el efecto de los valores extremos que afectaban a la regresión ha desaparecido.
+
+## Prediccón sobre los modelos.
+
+Para hacernos una idea del desempeño de estos cuatro modelos realizaremos una predicción para cada uno sobre una vivienda de $110 m^{2}$ 
+
+```{r}
+# Datos para modelos transfdormados y no transformados
+
+data_lin <- tibble(areaconst = 110)
+data_box <- predict(norm_areaconst, data_lin) |> set_names("areaconst_mod")
+
+#Predicciones modelos
+pred_lin_lin <- predict(lm_lin_lin, data_lin, interval = "prediction") |> 
+  as_tibble()
+pred_lin_box <- predict(lm_lin_box, data_box, interval = "prediction") |> 
+  as_tibble()
+pred_box_lin <- predict(lm_box_lin, data_lin, interval = "prediction") |> 
+  as_tibble() |> 
+  mutate(across(everything(), ~ predict(norm_preciom, ., inverse = TRUE)))
+pred_box_box <- predict(lm_box_box, data_box, interval = "prediction") |> 
+  as_tibble() |> 
+  mutate(across(everything(), ~ predict(norm_preciom, ., inverse = TRUE)))
+
+# Data frame con los relustados de los modelos
+bind_rows(list(lin_lin = pred_lin_lin,
+               lin_box = pred_lin_box,
+               box_lin = pred_box_lin,
+               box_box = pred_box_box),
+          .id = 'Modelo') |> 
+  kable()
 
 ```
+
+Los resultados indican que la elección del modelo tiene un gran impacto en la predicción del precio de un apartamento con un área determinada. Sin embargo, independientemente del modelo elegido, un apartamento de $110 m^{2}$ con un precio de $200$ millones de pesos sería una oferta llamativa en los datos del modelo Apartamentos de la Zona Sur.
+
+## Modelo escojido
+
+En base a los resultados obtenidos, se concluye que el modelo seleccionado es el box_box. Este modelo presenta un coeficiente de determinación $R^{2}$ del 62%, lo que significa que puede explicar el 62% de la variabilidad en el precio de los apartamentos. Además, la evaluación gráfica de los residuos muestra que este modelo presenta una distribución más uniforme y se acerca a la normalidad en comparación con los otros modelos. Por lo tanto, se puede concluir que el modelo box_box es el más adecuado para analizar la relación entre el área y el precio de los apartamentos en este conjunto de datos.
+
+# Construcción modelo para inferencia.
+
+El modelo elegido, box_box, fue entrenado utilizando el conjunto completo de datos, lo que podría resultar en un sobreajuste y limitar su capacidad para hacer inferencias en nuevos datos. Por lo tanto, nuestro próximo paso será construir un modelo que pueda ser utilizado para inferir sobre nuevos datos. Para lograr esto, dividiremos nuestro conjunto de datos en un conjunto de entrenamiento y otro de prueba, y utilizaremos una validación cruzada con k = 10 pliegues en el conjunto de entrenamiento.
+
+Utilizando el paquete `tidymodels`, modelaremos estos datos con tres algoritmos diferentes de regresión lineal, lm, gls y stan, y seleccionaremos el mejor modelo basado en su coeficiente de determinación ($R^{2}$) en la validación cruzada.
+
+## División de los datos
+
+Se dividirán los datos en un conjunto de entrenamiento y otro de prueba utilizando una proporción del 70% y 30%, respectivamente. Además, se aplicará una técnica de validación cruzada con 5 pliegues sobre el conjunto de datos de prueba. De esta manera, se podrá evaluar el rendimiento de los modelos de regresión lineal en datos no vistos y evitar sobreajuste.
 
 
 ```{r}
-# library(tidymodels)
-# library(tidyr)
-# library(dplyr)
-# 
-# # Definir el conjunto de datos
-# data(mtcars)
-# 
-# # Dividir los datos en un conjunto de entrenamiento y un conjunto de prueba
-# set.seed(123)
-# car_split <- initial_split(mtcars, prop = 0.8)
-# car_train <- training(car_split)
-# car_test <- testing(car_split)
-# 
-# # Especificar los motores y grids de hiperparámetros
-# models <- list(
-#   lm = linear_reg() %>% set_engine("lm"),
-#   brulee = linear_reg() %>% set_engine("brulee"),
-#   gls = linear_reg() %>% set_engine("gls"),
-#   keras = linear_reg() %>% set_engine("keras"),
-#   stan = linear_reg() %>% set_engine("stan")
-# )
-# 
-# param_grid <- list(
-#   lm = list(
-#     penalty = c(0, 0.01, 0.1),
-#     mixture = c(1, 0.5, 0)
-#   ),
-#   brulee = list(
-#     lambda = c(0.01, 0.1, 1),
-#     dropout = c(0.1, 0.2, 0.5)
-#   ),
-#   gls = list(
-#     correlation = c("corAR1", "corARMA"),
-#     p = c(1, 2)
-#   ),
-#   keras = list(
-#     epochs = c(10, 20, 30),
-#     dropout = c(0.1, 0.2, 0.5)
-#   ),
-#   stan = list(
-#     chains = c(2, 4, 8),
-#     iter = c(200, 500, 1000)
-#   )
-# )
-# 
-# # Ajustar los modelos con 10 combinaciones de hiperparámetros
-# results <- models %>% 
-#   tune_grid(
-#     resamples = vfold_cv(car_train, v = 10),
-#     grid = param_grid,
-#     metrics = metric_set(rmse),
-#     control = control_grid(save_pred = TRUE)
-#   ) %>% 
-#   fit_resamples()
-# 
-# # Comparar los resultados
-# all_results <- results %>% 
-#   collect_metrics() %>% 
-#   mutate(model = map_chr(.metrics, ~.x$recipe)) %>% 
-#   separate(model, c("model", "recipe"), sep = "_on_") %>% 
-#   mutate_at(vars(model, recipe), as.factor)
-# 
-# # Ver el resumen de los resultados
-# summary_results <- all_results %>% 
-#   group_by(model, recipe) %>% 
-#   summarize(mean_rmse = mean(.estimate), .groups = "drop") %>% 
-#   arrange(mean_rmse)
-# 
-# print(summary_results)
-# 
-# # Seleccionar el mejor modelo
-# best_model <- all_results %>% 
-#   filter(mean_rmse == min(mean_rmse))
-# 
-# print(best_model)
-# 
-# # Evaluar el modelo seleccionado en el conjunto de prueba
-# final_model <- best_model %>% 
-#   select(-c(recipe, mean_rmse)) %>% 
-#   pull(model) %>% 
-#   extract_model(models) %>% 
-#   set_args(maxit = 1000) %>% 
-#   fit(car_train)
-# 
-# final_predictions <- final_model %>% 
-#   predict(new_data = car_test)
-# 
-# # Calcular la métrica de evaluación en el conjunto de prueba
-# final_rmse <- final_predictions %>% 
-#   bind_cols(car_test) %>% 
-#   metrics(truth = mpg, estimate = .pred) %>% 
-#   select(.metric, .estimator, .estimate) %>% 
-#   filter(.metric == "rmse")
-# 
-# print(final_rmse)
+# Fijar la semilla para reproducibilidad
+set.seed(1234)
 
+# Split 70/30
+box_box_split <- datos_box_box_aug |> 
+    select(preciom_mod, areaconst_mod) |> 
+    initial_split(prop = 0.7, 
+                  strata = preciom_mod)
+
+#Conjunto de entrenamiento, prueba y k=10 prlieges
+box_box_train <- training(box_box_split)
+box_box_test <- testing(box_box_split)
+box_box_folds <- vfold_cv(box_box_train, strata = preciom_mod, v = 10)
 
 
 ```
 
+
+## Creación de modelos
+
+Usando la función `recipe`, especificaremos la fórmula `preciom_mod ~ areaconst_mod` para definir nuestra receta de transformación de datos. Dado que la transformación de datos ya se aplicó en la fase inicial, no agregaremos pasos adicionales. Posteriormente, procederemos a definir los modelos que serán utilizados.
+
+```{r}
+# Receta y definición del la formula
+box_box_rec <- recipe(preciom_mod ~ areaconst_mod, data = box_box_train) 
+
+# Iniciando los modelos a usar
+models_box_box <- list(
+    lm_reg = linear_reg(),
+    gls_reg = linear_reg(engine = "gls"),
+    stan_reg = linear_reg(engine = "stan")
+    
+)
+
+# 
+workflow_set_box_box <- workflow_set(preproc = list(formula = box_box_rec)
+                                     , models = models_box_box)
+```
+
+## Entremamiento modelos
+
+Se entrenarán los modelos usando validación cruzada con k=10 y se guardarán los resultados en `grid_results`.
+
+```{r message=FALSE, warning=FALSE}
+# Fijar la semilla para reproducibilidad
+set.seed(1234)
+
+# Definiendo que se guarden los pasos del flujo
+grid_ctrl <-
+   control_grid(
+      save_pred = TRUE,
+      save_workflow = TRUE
+   )
+
+# Entrenando los modelos con  k=10 pliegues y guardando los resultados
+grid_results <-
+   workflow_set_box_box |> 
+   workflow_map(
+      seed = 1234,
+      resamples = box_box_folds,
+      control = grid_ctrl
+   )
+```
+
+# Selección del mejor modelo
+
+Primero miraremos los resultados de los modelos
+
+```{r}
+# Ranking de medidas
+grid_results |> 
+  rank_results() |> 
+  select(-.config, -n, - preprocessor, -model) |> 
+  kable()
+```
+
+
+Vemos que todos losmodelos comparten el mismo $R^{2}$, para desempatar usararemos error de raíz cuadrada media (RMSE por sus siglas en ingles), con lo cual el modelo seleccinado sera la regresión lineal `stan`
+
+
+```{r}
+# Seleccionado mejor modelo
+best_results <- 
+   grid_results |> 
+   extract_workflow_set_result("formula_stan_reg") |> 
+   select_best(metric = "rmse")
+
+# Reentrenando sobre el conjunto completo de datos
+box_box_test_results <- grid_results |> 
+  extract_workflow("formula_stan_reg") |> 
+  finalize_workflow(best_results) |> 
+  last_fit(split = box_box_split)
+```
+
+$\\$
+
+## Coeficientes y $R^{2}$ modelo inferencia final
+
+Este es el $R^{2}$, coeficientes del modelo e intervalos de confianza
+
+```{r message=FALSE, warning=FALSE}
+collect_metrics(box_box_test_results) |> 
+  filter(.metric == "rsq") |> 
+  select(.metric, .estimate
+         ) |> 
+  kable(); box_box_test_results |>
+  extract_workflow() |> 
+  extract_model() |> 
+  posterior_interval() |>
+  as.data.frame() |> 
+  rownames_to_column(var = "term") |> 
+  slice(-3) |> 
+  mutate(fit = box_box_test_results$.workflow[[1]][2]$fit$fit$fit$coefficients) |> 
+  select(term, fit, everything()) |> 
+  kable()
+```
+
+Observamos que los coeficientes y sus intervalos de confianza en el modelo ajustado mediante validación cruzada son similares a los del modelo inicial box_box. A pesar de esto, el coeficiente de determinación ($R^2$) del modelo ajustado es menor. Sin embargo, esta reducción era esperada, ya que la validación cruzada implica una mayor generalización del modelo, lo que puede resultar en una disminución del $R^2$. La ventaja de este enfoque es que el modelo ajustado estará menos propenso al sobreajuste y, por lo tanto, será más adecuado para la predicción de nuevos datos.
+
+## Gráfica modelo de inferencia final.
+
+A continuación la representación grafica del modelo evaluado sobre todos los datos de Apartamentos de la Zona Sur de estrato 4.
+
+```{r fig.height=3.5}
+box_box_test_results_aug <- datos_box_box |> 
+  bind_cols(tibble(.fitted = box_box_test_results |>
+                     extract_workflow() |>
+                     extract_model() |> 
+                     predict(type = "response", newdata = datos_box_box)),
+            as_tibble(box_box_test_results |>
+                        extract_workflow() |>
+                        extract_model() |> 
+                        predictive_interval (newdata = datos_box_box, prob = 0.95)) |> 
+                        set_names(c("lwr","upr"))) |> 
+  mutate(preciom_rev = predict(norm_preciom, preciom_mod, inverse = TRUE),
+         .fitted_rev = predict(norm_preciom, .fitted, inverse = TRUE),
+         areaconst_rev = predict(norm_areaconst, areaconst_mod, inverse = TRUE),
+         lwr_rev = predict(norm_preciom, lwr, inverse = TRUE),
+         upr_rev = predict(norm_preciom, upr, inverse = TRUE),
+         ) 
+
+
+ggplot(box_box_test_results_aug, aes(areaconst_rev, preciom_rev,)) +
+  geom_point(alpha = 0.5) +
+  geom_line(data = datos_box_box_aug, aes(areaconst_rev, .fitted_rev), color = "blue") +
+  geom_ribbon(aes(ymin = lwr_rev, ymax = upr_rev ),alpha = 0.1)+
+    theme_tq()
+```
+
+
+## Prediccón sobre modelo de inferencia final.
+
+Para hacernos una idea del desempeño del  modelo realizaremos una predicción para cada uno sobre una vivienda de $110 m^{2}$ 
+
+
+```{r}
+tibble(.fited = box_box_test_results |> 
+         extract_workflow() |>
+         extract_model() |> 
+         predict(type = "response", newdata = data_box)) |> 
+  bind_cols(as_tibble(box_box_test_results |>
+                        extract_workflow() |>
+                        extract_model() |> 
+                        predictive_interval (newdata = data_box, prob = 0.95)) |> 
+              set_names(c("lwr","upr"))) |>
+  mutate(across(everything(), ~ predict(norm_preciom, ., inverse = TRUE))) |> 
+  kable()
+```
+
+## Grabando modelo final
+
+Para su futura implementación, se guardará el modelo en un archivo de documento .RDS. Esto permitirá una fácil recuperación del modelo y su uso en diferentes contextos. El archivo .RDS contendrá el objeto del modelo guardado como un archivo binario, lo que asegurará que todas las características del modelo, como los coeficientes y los parámetros, se mantengan intactos. Además, la extensión .RDS es ampliamente reconocida en el ecosistema de R como un formato de archivo para la persistencia de objetos, lo que garantiza que el modelo pueda ser utilizado por otros usuarios sin problemas.
+
+Además, se almacenan los objetos `norm_areaconst` y `norm_preciom` como complemento del modelo, con el fin de poder transformar y revertir la transformación de datos para el modelado. De esta manera, se logra mostrar los datos en su escala original.
+
+```{r}
+
+saveRDS(box_box_test_results |> 
+         extract_workflow() |>
+         extract_model(),
+        "modelo_lineal_simple.rds")
+
+saveRDS(norm_areaconst,
+        "area_box_cox.rds")
+
+saveRDS(norm_preciom,
+        "precio_box_cox.rds")
+```
 
 

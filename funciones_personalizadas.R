@@ -104,3 +104,13 @@ reg_analysis <- function(df){
                  top = textGrob("Regression Analysis"))
     
 }
+
+gg_lm_plot <- function(df, x, y, .fitted, ymin, ymax){
+    
+    ggplot(df, aes({{x}}, {{y}},)) +
+        geom_point(alpha = 0.5) +
+        geom_line(data = df, aes({{x}}, {{.fitted}}), color = "blue") +
+        geom_ribbon(aes(ymin = {{ymin}}, ymax = {{ymax}} ),alpha = 0.1)+
+        theme_tq()
+    
+}

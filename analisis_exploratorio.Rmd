@@ -14,7 +14,7 @@ Este documento contiene un análisis exploratorio de los datos contenidos en el 
 
 # Carga de librerias y funciones personalizadas
 
-En este análisis, se utilizan las librería listadas en el siguiente código. Además, para facilitar la creación de visualizaciones, se emplean lasfunciones personalizadas gg_rain_cloud, gg_bar y summary_table, las cuales se encuentran en el archivo funciones_personalizadas.R.
+En este análisis, se utilizan las librería listadas en el siguiente código. Además, para facilitar la creación de visualizaciones, se emplean las funciones personalizadas gg_rain_cloud, gg_bar y summary_table, las cuales se encuentran en el archivo funciones_personalizadas.R.
 
 ```{r message=FALSE, warning=FALSE}
 # Carga de paquetes necesarios para el código
