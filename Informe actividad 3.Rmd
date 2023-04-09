@@ -1,0 +1,292 @@
+---
+title: "Informe Modelo Lineal Simple para predecir el precio de los apartamentos de estrato 4 con área construida menor a 200 m²"
+author: "Camilo Andres Vega Ramírez"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 3
+---
+
+\newpage
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(tidyverse)
+library(paqueteMET) # Paquete para el análisis de series temporales
+library(tidyquant) # Paquete de finanzas para análisis cuantitativo de datos
+library(knitr)
+library(rstanarm)
+library(tidymodels)
+library(multilevelmod) # Paquete para ajuste de modelos de efectos mixtos
+library(gee)
+library(workboots)
+library(brulee)
+
+
+# Se crea un objeto "datos_vivienda" que contiene los datos de vivienda4
+datos_vivienda <- vivienda4
+
+source("funciones_personalizadas.R")
+
+
+opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+```
+
+
+Estimados miembros de la inmobiliaria A&C,
+
+Nos dirigimos a ustedes para presentarles un breve informe que resume los resultados obtenidos a partir del análisis realizado para desarrollar un modelo lineal simple que permita predecir el precio de los apartamentos de estrato 4 con un área construida menor a 200 m², a partir de los datos que ustedes nos proporcionaron. Este análisis fue llevado a cabo con el objetivo de proveer información relevante para la toma de decisiones en la compra, venta y valoración de propiedades.
+
+# Procedimiento
+
+Para el desollo del modelo solicitado se llevaron acabo los siguientes pasos.
+
+## Análisis exploratorio inicial.
+
+Para desarrollar el modelo lineal simple, se llevó a cabo un análisis exploratorio de datos inicial, cuyos resultados se encuentran en el anexo "análisis exploratorio.pdf". En dicho análisis se revisó la base de datos "vivienda4" correspondiente a 1706 observaciones de precios de vivienda, áreas, zonas y tipo de vivienda, y se llegó a las siguientes conclusiones.
+
+Se encontró que hay una relación entre las variables precio en millones y área en metros cuadrados, pero se hace evidente la necesidad de realizar transformaciones a estas dos variables para ser utilizadas en un modelo lineal, debido a que muestran asimetría positiva. Es decir, en ambas variables hay presencia de datos con valores altos que pueden sesgar la interpretación del modelo y dificultar la identificación de patrones claros en los datos.
+
+Además, se observó que las variables Zona y Tipo de vivienda también tienen un efecto tanto sobre los precios como sobre las áreas, como se puede apreciar en la siguiente gráfica.
+
+```{r fig.height=3.5}
+ggplot(datos_vivienda, aes(areaconst, preciom)) +
+    geom_point(alpha = 0.1) +
+    facet_grid(vars(tipo), vars(zona)) +
+    theme_tq()
+```
+
+Se nota que la relación entre precio y área es distinta dependiendo de la zona y el tipo de vivienda. También se hizo evidente la falta de balance en los datos para las combinaciones de zona y tipo, como se puede apreciar en las siguientes tablas de conteo y proporciones.
+
+`r table(datos_vivienda$zona, datos_vivienda$tipo) |> kable()` `r table(datos_vivienda$zona, datos_vivienda$tipo) |> prop.table() |> round(4) |> kable()`
+
+Debido a lo anterior, se limitó el estudio y desarrollo del modelo lineal simple solo para apartamentos pertenecientes a la zona sur, ya que es donde se concentra la mayoría de los datos y donde se puede apreciar de mejor forma a nivel visual una relación entre precio y área. Somos conscientes de que esto limita el alcance del modelo a ser solamente aplicado a apartamentos de estrato 4 de la zona sur, pero debido a los datos con los que se cuenta y al requerimiento de que el modelo sea lineal simple, esta es la mejor opción para garantizar un modelo de calidad que sea útil en fase de producción.
+
+Como alternativa, se ve en el análisis exploratorio la creación de un modelo lineal múltiple que incluya también las variables zona y tipo de vivienda, con el objetivo de ampliar el área de aplicación del modelo y tener en cuenta estas variables que, del estudio, se aprecia que tienen un efecto sobre el precio. Sin embargo, este modelo lineal múltiple solo se podría aplicar a casas y apartamentos de la zona norte y sur, ya que las demás zonas cuentan con un número limitado de observaciones que dificultan poder inferir sobre las mismas. Dicho modelo lineal múltiple también se llevó a cabo y se incluye dentro de los resultados del presente informe.
+
+En resumen, del análisis exploratorio se concluye que se debe crear un modelo lineal simple de la relación precio-área solo para apartamentos de la zona sur, y adicionalmente, un modelo lineal múltiple de la relación precio-área tanto para apartamentos como para casas de las zonas norte y sur. Para ambos modelos, se sugiere realizar transformación de datos para los precios y áreas con el fin de reducir las asimetrías de sus distribuciones, así como posterior a estas transformaciones, retirar valores extremos.
+
+
+## Creación modelo lineal simple.
+
+El procedimiento para construir el modelo lineal simple se detalla en el documento "Modelo-Lineal-Simple.pdf". En primer lugar, se llevó a cabo una transformación y filtrado de los datos según lo encontrado en el análisis exploratorio. A continuación, se probaron diversos modelos combinando datos transformados y no transformados con el objetivo de maximizar el coeficiente de determinación $R^2$ y ajustarce a los supuestos de regresión lineal de los residuales, para que el modelo resultante pudiera explicar la mayor cantidad posible de la variabilidad de los precios. Tras la evaluación, se concluyó que el mejor modelo es aquel que utiliza las transformaciones de Box Cox tanto para los precios como para las áreas.
+
+Finalmente, basándonos en el modelo anteriormente mencionado, se dividieron los datos en un conjunto de prueba y entrenamiento y se sometieron a diferentes motores de regresión lineal. A continuación, se aplicó un proceso de validación cruzada para obtener un modelo capaz de predecir datos nunca antes vistos. Este procedimiento redujo el valor de $R^2$, algo que se esperaba debido a que la validación cruzada implica una mayor generalización del modelo, pero que se compensa al hacer al modelo más adecuado para la predicción de nuevos datos. Como resultado final, se obtuvo un modelo lineal simple basado en el motor de regresión stan, el cual usa estimación Bayesiana, con un valor de $R^2$ de 58.94%. Los detalles del modelo se analizarán en profundidad en la sección de resultados.
+
+
+## Creación modelo lineal Multiple.
+
+El proceso de construcción del modelo lineal múltiple se detalla en el documento "Modelo-Lineal-Multiple.pdf". En primer lugar, se llevó a cabo una transformación y filtrado de los datos según lo encontrado en el análisis exploratorio. Basándonos en lo visto en el modelo lineal simple, se partió de los datos de precio y área transformados, el primero con una transformación de Box Cox y el segundo con una transformación de Yeo-Johnson. Se añadieron a estas variables las variables tipo y zona para la construcción del modelo múltiple. A continuación, se evaluó la variable precio en función de las variables área, tipo y zona, así como las interacciones entre ellas. Dependiendo de los resultados de los valores p de los coeficientes, se redujo la complejidad del modelo eliminando aquellas interacciones entre variables con coeficientes no significativos. Esto llevó a un modelo del precio en función del área, tipo, zona e interacción entre área y tipo.
+
+Finalmente, basándonos en el modelo anteriormente mencionado, se dividieron los datos en un conjunto de prueba y entrenamiento y se sometieron a diferentes motores de regresión lineal. A continuación, se aplicó un proceso de validación cruzada para obtener un modelo capaz de predecir datos nunca antes vistos. Este procedimiento redujo el valor de $R^2$, algo que se esperaba debido a que la validación cruzada implica una mayor generalización del modelo, pero que se compensa al hacer al modelo más adecuado para la predicción de nuevos datos. Como resultado final, se obtuvo un modelo lineal múltiple basado en el motor de regresión Brulee, el cual se basa en herramientas de deep learning, con un valor de $R^2$ de 63.84%. Los detalles del modelo se analizarán en profundidad en la sección de resultados.
+
+Cabe resaltar que el modelo lineal múltiple presenta un mejor $R^2$ y un mejor desempeño en las evaluaciones de los supuestos de los residuos, tal como se puede apreciar en los respectivos documentos "Modelo-Lineal-Simple.pdf" y "Modelo-Lineal-Multiple.pdf".
+
+# Resultados.
+
+A continuación, se describen los modelos lineales simples y múltiples finales desarrollados en los estudios. Se explicará su fórmula matemática, representación gráfica, interpretación y aplicación correspondiente.
+
+## Resultado Modelo Lineal Simple.
+
+El modelo lineal simple creado para predecir el valor de apartamentos de estrato cuatro en la zona sur se expresa mediante la siguiente fórmula:
+
+\[ 
+\hat{y} = \left(\left(0.0065604 + 0.7787920\cdot \left(\frac{x^{-0.9999576} - 1}{-0.9999576}\right)\right)\cdot (-0.567132) + 1\right)^{-1/0.567132}
+\]
+$\\$
+
+Donde:
+
+* $\hat{y}$ es el precio en millones predicho para apartamentos de estrato cuatro de la zona sur.
+* $x$ es el área en metros cuadrados del apartamentos de estrato cuatro de la zona sur.
+
+Es importante mencionar que la fórmula ya tiene en cuenta la transformación de Box-Cox aplicada al área, así como la reversión de dicha transformación para el precio. Esto permite que los resultados se expresen en la escala original de los datos.
+
+
+La siguiente es la representación gráfica del modelo aplicado a las 1344 observaciones de apartamentos de estrato 4 en la zona sur:
+
+```{r fig.height=3.5}
+
+norm_areaconst <- readRDS("area_box_cox.rds")
+norm_preciom <- readRDS("precio_box_cox.rds")
+model_simple <- readRDS("modelo_lineal_simple.rds")
+
+datos_vivienda_mod <- datos_vivienda |> 
+    filter(zona == "Zona Sur",
+           tipo == "Apartamento")
+
+datos_vivienda_mod <- datos_vivienda_mod |>
+    mutate(preciom_mod = norm_preciom$x.t)
+
+datos_vivienda_mod <- datos_vivienda_mod |>
+    mutate(areaconst_mod = norm_areaconst$x.t)
+
+datos_vivienda_mod <- datos_vivienda_mod |>
+    mutate(areaconst_mod = norm_areaconst$x.t)
+
+datos_box_box <- datos_vivienda_mod |> 
+    select(preciom_mod, areaconst_mod) 
+
+box_box_test_results_aug <- datos_box_box |> 
+  bind_cols(tibble(.fitted = model_simple |> 
+                     predict(type = "response", newdata = datos_box_box)),
+            as_tibble(model_simple |> 
+                        predictive_interval(newdata = datos_box_box, prob = 0.95)) |> 
+                        set_names(c("lwr","upr"))) |> 
+  mutate(preciom_rev = predict(norm_preciom, preciom_mod, inverse = TRUE),
+         .fitted_rev = predict(norm_preciom, .fitted, inverse = TRUE),
+         areaconst_rev = predict(norm_areaconst, areaconst_mod, inverse = TRUE),
+         lwr_rev = predict(norm_preciom, lwr, inverse = TRUE),
+         upr_rev = predict(norm_preciom, upr, inverse = TRUE),
+         ) 
+
+
+ggplot(box_box_test_results_aug, aes(areaconst_rev, preciom_rev,)) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = box_box_test_results_aug, aes(areaconst_rev, .fitted_rev), color = "blue") +
+  geom_ribbon(aes(ymin = lwr_rev, ymax = upr_rev ),alpha = 0.1)+
+    theme_tq()
+
+```
+
+Con el objetivo de tener una idea acerca de las predicciones del modelo, se presenta una tabla que contiene los valores predichos junto con sus intervalos de confianza (95%) para áreas de $50m^2$, $75m^2$, $100m^2$, $150m^2$ y $200m^2$ de apartamentos de estrato cuatro en la zona sur.
+
+```{r}
+data_lin <- tibble(areaconst = c(50,75,100,150,200))
+data_box <- predict(norm_areaconst, data_lin) |> set_names("areaconst_mod")
+
+data_lin |> bind_cols(
+tibble(.fited = model_simple |> 
+         predict(type = "response", newdata = data_box)) |> 
+  bind_cols(as_tibble(model_simple |> 
+                        predictive_interval (newdata = data_box, prob = 0.95)) |> 
+              set_names(c("lwr","upr"))) |>
+  mutate(across(everything(), ~ predict(norm_preciom, ., inverse = TRUE)))) |> 
+    set_names(c("Área", "Precio Predicho", "Rango Inferiror", "Rango Superior")) |> 
+  kable()
+```
+
+Como se puede observar, el modelo predice un comportamiento logarítmico de los datos, lo que significa que el efecto del área construida sobre el precio es positivo, pero su influencia disminuye gradualmente a medida que el área aumenta. Esto también afecta los rangos de predicción del modelo, que son cada vez más amplios a medida que el área de la vivienda aumenta.
+
+Como se mencionó anteriormente, el valor de $R^2$ del modelo es del 0.5894, lo que indica que el modelo puede explicar el 58.94% de la variabilidad en los precios de las viviendas en función de su área. Por lo tanto, se puede concluir que el modelo tiene una habilidad moderada/baja para la predicción y que se necesitarán tener en cuenta variables adicionales así como la intervención de un experto en vivienda para interpretar sus resultados.
+
+Se adjuntan a este informe los archivos binarios en formato .RDS "area_box_cox.rds", "precio_box_cox.rds" y "modelo_lineal_simple.rds", que podrán ser utilizados en futuras implementaciones de automatización del modelo.
+
+
+## Resultado Modelo Lineal Multiple.
+
+El modelo lineal simple creado para predecir el valor de apartamentos y casas de estrato cuatro en las zonas sur y norte se expresa mediante la siguiente fórmula:
+
+\[ 
+\hat{y} = \left(\left(-0.1226 + 0.848 \left(\frac{((x_1+1)^{-1.2272}) - 1}{-1.2272}\right) + 0.1987x_2 + 0.0121x_3 -0.2354 x_1 x_2    \right)\cdot (−0.4822) + 1\right)^{- \frac{1}{0.4822}}
+\]
+$\\$
+
+Donde:
+
+* $\hat{y}$ es el precio en millones predicho para la vivienda.
+* $x_1$ es el área en metros cuadrados de la vivienda.
+* $x_2$ es `0` si la vivienda es apartamento o `1` si la vivienda es una casa.
++ $x_3$ es `0` si la vivienda es de la zona norte o `1` si la vivienda de la zona sur
+
+Es importante mencionar que la fórmula ya tiene en cuenta la transformación de Yeo-Johnson aplicada al área, así como la reversión de la trasnformación Box Cox para el precio. Esto permite que los resultados se expresen en la escala original de los datos.
+
+
+La siguiente es la representación gráfica del modelo aplicado a las 1632 observaciones de viviendas de estrato 4 en las zonas sur y norte:
+
+```{r fig.height=3.5}
+norm_areaconst_multiple <- readRDS("area_box_cox_multiple.rds")
+norm_preciom_multiple <- readRDS("precio_box_cox_multiple.rds")
+model_multiple <- readRDS("modelo_lineal_multiple.rds")
+data_boot <- readRDS("workflow_multiple.rds")
+boost_grafica <- readRDS("boost_grafica.rds")
+receta <- readRDS("receta_multipe.rds")
+datos_lm2_train <- readRDS("data_train_multiple.rds")
+
+ggplot(boost_grafica, aes(areaconst_rev, preciom_rev,)) +
+  geom_point(alpha = 0.5) +
+  geom_line(data = boost_grafica, aes(areaconst_rev, .fitted_rev), color = "blue") +
+  geom_ribbon(aes(ymin = lwr_rev, ymax = upr_rev ),alpha = 0.1)+
+    theme_tq()  +
+    facet_grid(vars(tipo), vars(zona))
+```
+
+
+Con el objetivo de tener una idea acerca de las predicciones del modelo, se presenta una tabla que contiene los valores predichos junto con sus intervalos de confianza (95%) para áreas de $50m^2$, $75m^2$, $100m^2$, $150m^2$ y $200m^2$ en todas las combinaciones de apartamento, casa, para la zona norte y sur, de estrato 4.
+
+```{r fig.height=3.5}
+datos_vivienda_lm <- datos_vivienda |> 
+    filter(zona %in% c("Zona Sur", "Zona Norte"))
+
+data_lmm <- expand.grid(list(areaconst_mod = c(50,75,100,150,200),
+                             tipo = datos_vivienda_lm$tipo |> unique(),
+                             zona = datos_vivienda_lm$zona |> unique()
+                             )) |> 
+    mutate(areaconst_mod = predict(norm_areaconst_multiple, areaconst_mod))
+
+datos_para_modelo <- receta |> 
+  prep() |> 
+  bake(data_lmm)
+
+datos_pred <- model_multiple |> 
+  predict(new_data = datos_para_modelo)
+
+data_boostrap <- data_lmm |> 
+    bind_cols(datos_pred) |> 
+    rename(preciom_mod = .pred)
+    
+
+datos_inteval <- data_boot |> 
+  predict_boots(
+    n = 2000,
+    training_data = datos_lm2_train,
+    new_data = data_boostrap 
+  )
+
+datos_inteval_2 <- datos_inteval |>  
+  summarise_predictions() |> 
+  select(-rowid, -.preds, -.pred)
+
+data_lmm |> bind_cols(datos_pred, datos_inteval_2) |> 
+    mutate(Área = predict(norm_areaconst_multiple, areaconst_mod, inverse = TRUE),
+           `Precio Predicho` = predict(norm_preciom_multiple, .pred, inverse = TRUE),
+           `Rango Inferior` = predict(norm_preciom_multiple, .pred_lower, inverse = TRUE),
+           `Rango Superior` = predict(norm_preciom_multiple, .pred_upper, inverse = TRUE)) |> 
+    select(Área, tipo, zona, `Precio Predicho`, `Rango Inferior`, `Rango Superior`) |> 
+    kable()
+
+```
+
+
+Como se puede observar, el modelo predice un comportamiento logarítmico de los datos. Esto significa que el efecto del área construida sobre el precio es positivo, pero su influencia disminuye gradualmente a medida que el área aumenta. Además, esto afecta los rangos de predicción del modelo, que se vuelven cada vez más amplios a medida que el área de la vivienda aumenta.
+
+Adicionalmente, se puede apreciar que el modelo tiene un efecto en las predicciones donde las casas tienen mayores predicciones de precios que los apartamentos. Asimismo, las predicciones de precios de las viviendas en la zona sur son más altas que las de la zona norte. Por último, a medida que crecen los metros cuadrados de las casas, estas presentan una disminución más acelerada en su efecto sobre los precios en comparación con la disminución en el aumento del metro cuadrado de los apartamentos.
+
+Como se mencionó anteriormente, el valor de $R^2$ del modelo es de 0.6384, lo que indica que el modelo puede explicar el 63.84% de la variabilidad en los precios de las viviendas en función de su área. Por lo tanto, se puede concluir que el modelo tiene una habilidad moderada para la predicción, y que se necesitarán tener en cuenta variables adicionales, así como la intervención de un experto en vivienda, para interpretar sus resultados.
+
+Se adjuntan a este informe los archivos binarios en formato .RDS "area_yeo_johnson_multiple.rds", "precio_box_cox_multiple.rds" y "modelo_lineal_multiple.rds". Estos archivos podrán ser utilizados en futuras implementaciones de automatización del modelo.
+
+
+# Recomendaciones Finales
+
+Es importante tener en cuenta que los datos suministrados no contienen información importante para calcular el precio de una vivienda, como el número de habitaciones, número de baños, antigüedad del inmueble, acabados del inmueble, zonas comunes, ciclos económicos, inflación, entre otros. Estos factores pueden explicar la variabilidad en los precios que los modelos suministrados no pueden explicar. Por lo tanto, es de suma importancia que al aplicar los modelos suministrados, siempre se haga con el acompañamiento de un experto en vivienda de la inmobiliaria, quien, con ayuda de los resultados del modelo, pueda dar luces respecto a cuál es el precio más probable, dado el rango suministrado por los modelos.
+
+Recordamos que el modelo simple está acotado solo para apartamentos de la zona sur y el modelo múltiple para apartamentos y casas de las zonas norte y sur. Otra recomendación importante es la temporalidad de los datos. Es necesario tener en cuenta que los resultados de las predicciones serán de precios en el mismo año de los datos originales. Por lo tanto, será necesario ajustar los precios dependiendo de la inflación, la demanda de vivienda y otras variables para llevar los precios a valores de años posteriores.
+
+Por último, se recomienda en lo posible repetir el estudio incorporando el mayor número de variables mencionadas en este apartado, así como las recomendadas por expertos. También es recomendable considerar la utilización de algoritmos y motores de machine learning avanzados para obtener el mejor modelo predictivo posible.
+
+# Lista de anexos
+
+* ***"analisis_exploratorio.pdf":*** Documento que contiene el estudio exploratorio inicial de los datos.
+* ***"Modelo-Lineal-Simple.pdf":*** Documento que explica el proceso de creación del modelo lineal simple.
+* ***"Modelo-Lineal-Multiple.pdf":*** Documento que explica el proceso de creación del modelo lineal múltiple.
+* ***"area_box_cox.rds":*** Archivo binario para aplicar la transformación y reversión de transformación a los datos de área para el modelo simple.
+* ***"area_yeo_johnson_multiple.rds":*** Archivo binario para aplicar la transformación y reversión de transformación a los datos de área para el modelo múltiple.
+* ***"precio_box_cox.rds":*** Archivo binario para aplicar la transformación y reversión de transformación a los datos de precio para el modelo simple.
+* ***"precio_box_cox.rds_multiple":*** Archivo binario para aplicar la transformación y reversión de transformación a los datos de precio para el modelo múltiple.
+* ***"modelo_lineal_simple.rds":*** Archivo binario en el motor Stan que contiene el modelo lineal simple para poder ser implementado en R.
+* ***"modelo_lineal_multiple.rds":*** Archivo binario en el motor Brulee que contiene el modelo lineal múltiple para poder ser implementado en R.
+
+
+

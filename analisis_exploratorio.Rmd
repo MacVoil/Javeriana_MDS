@@ -1,14 +1,20 @@
 ---
 title: "Análisis Exploratorio"
 author: "Camilo Vega"
-output: 
-    pdf_document:
-        latex_engine: xelatex
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+\newpage
+
+# Introducción
 
 Este documento contiene un análisis exploratorio de los datos contenidos en el dataframe vivienda4 del paquete paqueteMET, los cuales corresponden a los precios de vivienda en millones de pesos colombianos por zona, estrato, área construida y tipo de vivienda. El objetivo de este análisis es evaluar la calidad de los datos y detectar posibles relaciones entre las variables, con el fin de desarrollar un modelo de regresión lineal que explique de la mejor manera posible el precio en millones de pesos colombianos.
 
@@ -159,5 +165,5 @@ Sin embargo, es importante tener en cuenta que al filtrar los datos de esta mane
 
 Como alternativa, se sugiere crear un modelo lineal multivariado que explique la variable preciom a partir de areaconst, tipo y zona. Se recomienda excluir las zonas Centro, Oriente y Oeste debido a la baja cantidad de observaciones, lo que podría afectar la calidad del modelo.
 
-Por último, se recomienda la transformación (aproximando a una distribución normal) y eliminación de valores extremos de las variables preciom. Esto permitirá mejorar la calidad de los modelos creados, independientemente de si se utiliza un modelo lineal simple o uno multivariado.
+Por último, se recomienda la transformación (aproximando a una distribución normal) y eliminación de valores extremos de las variables `preciom` y `areaconst`. Esto permitirá mejorar la calidad de los modelos creados, independientemente de si se utiliza un modelo lineal simple o uno multivariado.
 

@@ -1,14 +1,20 @@
 ---
 title: "Modelo Lineal Simple"
 author: "Camilo Vega"
-output: 
-    pdf_document:
-        latex_engine: xelatex
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+\newpage
+
+# Introduccion
 
 Este documento presenta un análisis destinado a la construcción de un modelo lineal simple utilizando los datos del dataframe "vivienda4" del paquete "paqueteMET". El objetivo es determinar el modelo más adecuado para explicar la relación entre los metros cuadrados de una vivienda y su precio en millones de pesos colombianos.
 
@@ -446,11 +452,11 @@ En base a los resultados obtenidos, se concluye que el modelo seleccionado es el
 
 El modelo elegido, box_box, fue entrenado utilizando el conjunto completo de datos, lo que podría resultar en un sobreajuste y limitar su capacidad para hacer inferencias en nuevos datos. Por lo tanto, nuestro próximo paso será construir un modelo que pueda ser utilizado para inferir sobre nuevos datos. Para lograr esto, dividiremos nuestro conjunto de datos en un conjunto de entrenamiento y otro de prueba, y utilizaremos una validación cruzada con k = 10 pliegues en el conjunto de entrenamiento.
 
-Utilizando el paquete `tidymodels`, modelaremos estos datos con tres algoritmos diferentes de regresión lineal, lm, gls y stan, y seleccionaremos el mejor modelo basado en su coeficiente de determinación ($R^{2}$) en la validación cruzada.
+Utilizando el paquete `tidymodels`, modelaremos estos datos con tres motores diferentes de regresión lineal, lm, gls y stan, y seleccionaremos el mejor modelo basado en su coeficiente de determinación ($R^{2}$) en la validación cruzada.
 
 ## División de los datos
 
-Se dividirán los datos en un conjunto de entrenamiento y otro de prueba utilizando una proporción del 70% y 30%, respectivamente. Además, se aplicará una técnica de validación cruzada con 5 pliegues sobre el conjunto de datos de prueba. De esta manera, se podrá evaluar el rendimiento de los modelos de regresión lineal en datos no vistos y evitar sobreajuste.
+Se dividirán los datos en un conjunto de entrenamiento y otro de prueba utilizando una proporción del 70% y 30%, respectivamente. Además, se aplicará una técnica de validación cruzada con 10 pliegues sobre el conjunto de datos de prueba. De esta manera, se podrá evaluar el rendimiento de los modelos de regresión lineal en datos no vistos y evitar sobreajuste.
 
 
 ```{r}
@@ -518,7 +524,7 @@ grid_results <-
    )
 ```
 
-# Selección del mejor modelo
+## Selección del mejor modelo
 
 Primero miraremos los resultados de los modelos
 
@@ -531,7 +537,7 @@ grid_results |>
 ```
 
 
-Vemos que todos losmodelos comparten el mismo $R^{2}$, para desempatar usararemos error de raíz cuadrada media (RMSE por sus siglas en ingles), con lo cual el modelo seleccinado sera la regresión lineal `stan`
+Observamos que todos los modelos tienen el mismo coeficiente de determinación ($R^{2}$), por lo que para desempatar utilizaremos el error de raíz cuadrada media (RMSE por sus siglas en inglés). De esta manera, el modelo seleccionado será la regresión lineal `stan`.
 
 
 ```{r}
