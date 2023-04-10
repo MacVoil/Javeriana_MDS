@@ -178,10 +178,10 @@ Se adjuntan a este informe los archivos binarios en formato .RDS "area_box_cox.r
 
 El modelo lineal simple creado para predecir el valor de apartamentos y casas de estrato cuatro en las zonas sur y norte se expresa mediante la siguiente fórmula:
 
-\[ 
-\hat{y} = \left(\left(-0.1226 + 0.848 \left(\frac{((x_1+1)^{-1.2272}) - 1}{-1.2272}\right) + 0.1987x_2 + 0.0121x_3 -0.2354 x_1 x_2    \right)\cdot (−0.4822) + 1\right)^{- \frac{1}{0.4822}}
-\]
-$\\$
+\begin{center}
+\includegraphics{formulalarga.png}
+\end{center}
+
 
 Donde:
 
@@ -287,6 +287,3 @@ Por último, se recomienda en lo posible repetir el estudio incorporando el mayo
 * ***"precio_box_cox.rds_multiple":*** Archivo binario para aplicar la transformación y reversión de transformación a los datos de precio para el modelo múltiple.
 * ***"modelo_lineal_simple.rds":*** Archivo binario en el motor Stan que contiene el modelo lineal simple para poder ser implementado en R.
 * ***"modelo_lineal_multiple.rds":*** Archivo binario en el motor Brulee que contiene el modelo lineal múltiple para poder ser implementado en R.
-
-
-
