@@ -275,7 +275,7 @@ WHERE NOT EXISTS (
 tiene disponibles para matricular */
     AND usuarios.nombre = 'Olive'
     AND usuarios.apellido =  'Stone'
-/* Ordenando por curso y semestre para facilitar la lectura. */
+/* Ordenando semestre para facilitar la lectura. */
 ORDER BY cursos_carreras.semestre;
 
 ```
