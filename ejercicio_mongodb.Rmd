@@ -11,7 +11,9 @@ output: pdf_document
 
 #Punto A
 ```{bash eval=FALSE}
-university.carreras.aggregate([
+use university
+
+db.carreras.aggregate([
   {
     $match:
       /**
@@ -131,18 +133,57 @@ university.carreras.aggregate([
             },
           ],
         },
-        horarios: {
-          $map: {
-            input: "$curso.calendario",
-            as: "c",
-            in: {
-              $concat: [
-                "$$c.dia",
-                " ",
-                "$$c.inicio",
-                " - ",
-                "$$c.fin",
+        dias: "$curso.calendario.dia",
+        horario: {
+          $concat: [
+            {
+              $arrayElemAt: [
+                "$curso.calendario.inicio",
+                0,
               ],
+            },
+            " - Edificio: ",
+            {
+              $arrayElemAt: [
+                "$curso.calendario.fin",
+                0,
+              ],
+            },
+          ],
+        },
+      },
+  },
+  {
+    $group:
+      /**
+       * _id: The id of the group.
+       * fieldN: The first field name.
+       */
+      {
+        _id: "$curso",
+        grupos: {
+          $push: "$$ROOT",
+        },
+      },
+  },
+  {
+    $project:
+      /**
+       * specifications: The fields to
+       *   include or exclude.
+       */
+      {
+        _id: 0,
+        curso: "$_id",
+        grupos: {
+          $map: {
+            input: "$grupos",
+            as: "grupo",
+            in: {
+              profesor: "$$grupo.profesor",
+              salon: "$$grupo.salon",
+              dias: "$$grupo.dias",
+              horario: "$$grupo.horario",
             },
           },
         },
@@ -151,97 +192,13 @@ university.carreras.aggregate([
 ])
 ```
 
-```{python}
-from pymongo import MongoClient
-
-# Requires the PyMongo package.
-# https://api.mongodb.com/python/current
-
-client = MongoClient('mongodb://localhost:27017/')
-result = client['university']['carreras'].aggregate([
-    {
-        '$match': {
-            'nombre': 'Ingeniería de Sistemas'
-        }
-    }, {
-        '$unwind': {
-            'path': '$cursos', 
-            'preserveNullAndEmptyArrays': True
-        }
-    }, {
-        '$project': {
-            'curso': '$cursos.curso'
-        }
-    }, {
-        '$lookup': {
-            'from': 'cursos', 
-            'localField': 'curso', 
-            'foreignField': '_id', 
-            'as': 'curso'
-        }
-    }, {
-        '$unwind': {
-            'path': '$curso', 
-            'preserveNullAndEmptyArrays': True
-        }
-    }, {
-        '$lookup': {
-            'from': 'profesores', 
-            'localField': 'curso.profesor', 
-            'foreignField': '_id', 
-            'as': 'profesor'
-        }
-    }, {
-        '$unwind': {
-            'path': '$profesor', 
-            'preserveNullAndEmptyArrays': True
-        }
-    }, {
-        '$project': {
-            '_id': 0, 
-            'curso': '$curso.nombre', 
-            'profesor': '$profesor.nombre', 
-            'salon': {
-                '$concat': [
-                    {
-                        '$arrayElemAt': [
-                            '$curso.calendario.salon', 0
-                        ]
-                    }, ' - Edificio: ', {
-                        '$arrayElemAt': [
-                            '$curso.calendario.edificio', 0
-                        ]
-                    }
-                ]
-            }, 
-            'horarios': {
-                '$map': {
-                    'input': '$curso.calendario', 
-                    'as': 'c', 
-                    'in': {
-                        '$concat': [
-                            '$$c.dia', ' ', '$$c.inicio', ' - ', '$$c.fin'
-                        ]
-                    }
-                }
-            }
-        }
-    }
-])
-```
-
-
-```{python}
-import pprint
-
-pprint.pprint(list(result))
-```
-
 
 # Punto B
 
 ```{bash eval=FALSE}
-[
+use university
+
+db.carreras.aggregate([
   {
     $unwind:
       /**
@@ -412,6 +369,182 @@ pprint.pprint(list(result))
         },
       },
   },
-]
+])
+```
+
+# punto c
+```{bash eval=FALSE}
+use university
+
+db.estudiantes.aggregate([
+  {
+    $match:
+      /**
+       * query: The query in MQL.
+       */
+      {
+        nombre: "Olive Stone",
+      },
+  },
+  {
+    $unwind:
+      /**
+       * path: Path to the array field.
+       * includeArrayIndex: Optional name for index.
+       * preserveNullAndEmptyArrays: Optional
+       *   toggle to unwind null and empty values.
+       */
+      {
+        path: "$carreras",
+        preserveNullAndEmptyArrays: true,
+      },
+  },
+  {
+    $lookup:
+      /**
+       * from: The target collection.
+       * localField: The local join field.
+       * foreignField: The target join field.
+       * as: The name for the results.
+       * pipeline: Optional pipeline to run on the foreign collection.
+       * let: Optional variables to use in the pipeline field stages.
+       */
+      {
+        from: "carreras",
+        localField: "carreras",
+        foreignField: "_id",
+        as: "carreras",
+      },
+  },
+  {
+    $unwind:
+      /**
+       * path: Path to the array field.
+       * includeArrayIndex: Optional name for index.
+       * preserveNullAndEmptyArrays: Optional
+       *   toggle to unwind null and empty values.
+       */
+      {
+        path: "$carreras",
+        preserveNullAndEmptyArrays: true,
+      },
+  },
+  {
+    $project:
+      /**
+       * specifications: The fields to
+       *   include or exclude.
+       */
+      {
+        _id: 0,
+        estudiante: "$nombre",
+        carrera: "$carreras.nombre",
+        semestre: "$semestre",
+        cursos_carrera: "$carreras.cursos",
+        cursos_inscritos: "$cursos",
+      },
+  },
+  {
+    $project:
+      /**
+       * specifications: The fields to
+       *   include or exclude.
+       */
+      {
+        carrera: "$carrera",
+        cursos_carrera: {
+          $filter: {
+            input: "$cursos_carrera",
+            as: "curso",
+            cond: {
+              $and: [
+                {
+                  $lte: [
+                    "$$curso.semestre",
+                    "$semestre",
+                  ],
+                },
+                {
+                  $not: {
+                    $in: [
+                      "$$curso.curso",
+                      "$cursos_inscritos",
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+  },
+  {
+    $unwind:
+      /**
+       * path: Path to the array field.
+       * includeArrayIndex: Optional name for index.
+       * preserveNullAndEmptyArrays: Optional
+       *   toggle to unwind null and empty values.
+       */
+      {
+        path: "$cursos_carrera",
+        preserveNullAndEmptyArrays: true,
+      },
+  },
+  {
+    $project:
+      /**
+       * specifications: The fields to
+       *   include or exclude.
+       */
+      {
+        carrera: "$carrera",
+        semestre: "$cursos_carrera.semestre",
+        id_curso: "$cursos_carrera.curso",
+      },
+  },
+  {
+    $lookup:
+      /**
+       * from: The target collection.
+       * localField: The local join field.
+       * foreignField: The target join field.
+       * as: The name for the results.
+       * pipeline: Optional pipeline to run on the foreign collection.
+       * let: Optional variables to use in the pipeline field stages.
+       */
+      {
+        from: "cursos",
+        localField: "id_curso",
+        foreignField: "_id",
+        as: "curso",
+      },
+  },
+  {
+    $unwind:
+      /**
+       * path: Path to the array field.
+       * includeArrayIndex: Optional name for index.
+       * preserveNullAndEmptyArrays: Optional
+       *   toggle to unwind null and empty values.
+       */
+      {
+        path: "$curso",
+        preserveNullAndEmptyArrays: true,
+      },
+  },
+  {
+    $project:
+      /**
+       * specifications: The fields to
+       *   include or exclude.
+       */
+      {
+        curso: "$curso.nombre",
+        carrera: "$carrera",
+        semestre: "$semestre",
+      },
+  },
+])
 ```
 
