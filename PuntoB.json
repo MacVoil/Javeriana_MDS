@@ -1,0 +1,55 @@
+[{
+  "profesor": "Ben Stone",
+  "careras_cursos": [
+    {
+      "carrera": "Matemáticas Aplicadas",
+      "cursos": [
+        "Estructuras de Datos"
+      ]
+    },
+    {
+      "carrera": "Ingeniería de Sistemas",
+      "cursos": [
+        "Desarrollo de Videojuegos",
+        "Introducción a la Programación",
+        "Estructuras de Datos",
+        "Técnicas y Prácticas de Programación"
+      ]
+    }
+  ]
+},{
+  "profesor": "Claudia Tiedemann",
+  "careras_cursos": [
+    {
+      "carrera": "Matemáticas Aplicadas",
+      "cursos": [
+        "Álgebra Moderna"
+      ]
+    },
+    {
+      "carrera": "Ingeniería Mecánica",
+      "cursos": [
+        "Propiedades de los Materiales",
+        "Diseño Mecánico",
+        "Máquinas Térmicas e Hidráulicas"
+      ]
+    }
+  ]
+},{
+  "profesor": "Ulrich Nielsen",
+  "careras_cursos": [
+    {
+      "carrera": "Ingeniería de Sistemas",
+      "cursos": [
+        "Programación Paralela",
+        "Optimización Matemática"
+      ]
+    },
+    {
+      "carrera": "Matemáticas Aplicadas",
+      "cursos": [
+        "Optimización Matemática"
+      ]
+    }
+  ]
+}]

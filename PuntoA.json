@@ -1,0 +1,260 @@
+[{
+  "curso": "Introducción a la Programación",
+  "profesor": "Ben Stone",
+  "salon": "1.4 - Edificio: El Lago",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Introducción al Modelado de Sistemas",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Estructuras de Datos",
+  "profesor": "Ben Stone",
+  "salon": "3.4 - Edificio: Almendros",
+  "horario": "10:00 AM - 12:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Técnicas y Prácticas de Programación",
+  "profesor": "Ben Stone",
+  "salon": "3.4 - Edificio: Almendros",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles"
+  ]
+},{
+  "curso": "Programación Orientada a Objetos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Lógica Digital y Lenguaje Máquina",
+  "profesor": "Grace Stone",
+  "salon": "1.2 - Edificio: El Lago",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Miércoles",
+    "Viernes"
+  ]
+},{
+  "curso": "Programación Funcional",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Lógica para Ciencias de la Computación",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Árboles y Grafos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Arquitectura del Computador",
+  "profesor": "Grace Stone",
+  "salon": "2.6 - Edificio: El Lago",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Lunes",
+    "Viernes"
+  ]
+},{
+  "curso": "Diseño de Interfaces Humano-Computador",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Computabilidad y Complejidad",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Computación Gráfica",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Comunicación de Datos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Desarrollo Formal de Sistemas",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Análisis y Diseño de Algoritmos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Gestión y Modelación de Datos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Sistemas Operativos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Programación Paralela",
+  "profesor": "Ulrich Nielsen",
+  "salon": "3.3 - Edificio: Palmas",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Aprendizaje Automático",
+  "profesor": "Robert Vance",
+  "salon": "1.1 - Edificio: El Samán",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Animación y Simulación",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Introducción a la Seguridad Informática",
+  "profesor": "Robert Vance",
+  "salon": "3.5 - Edificio: Palmas",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Miércoles",
+    "Viernes"
+  ]
+},{
+  "curso": "Construcción de Software y Pruebas",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Sistemas Inteligentes",
+  "profesor": "Robert Vance",
+  "salon": "2.2 - Edificio: Cedro Rosado",
+  "horario": "10:00 AM - 12:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles"
+  ]
+},{
+  "curso": "Computación en la Nube",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Desarrollo de Videojuegos",
+  "profesor": "Ben Stone",
+  "salon": "3.2 - Edificio: Palmas",
+  "horario": "02:00 PM - 05:00 PM",
+  "dias": [
+    "Martes",
+    "Viernes"
+  ]
+},{
+  "curso": "Cinemática y Dinámica",
+  "profesor": "Saanvi Bahl",
+  "salon": "2.2 - Edificio: El Lago",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles"
+  ]
+},{
+  "curso": "Electricidad y Magnetismo",
+  "profesor": "Saanvi Bahl",
+  "salon": "1.5 - Edificio: El Lago",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles",
+    "Viernes"
+  ]
+},{
+  "curso": "Cálculo Diferencial",
+  "profesor": "Grace Stone",
+  "salon": "2.5 - Edificio: El Lago",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Álgebra Lineal",
+  "profesor": "Grace Stone",
+  "salon": "3.1 - Edificio: El Lago",
+  "horario": "10:00AM - 12:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Cálculo Integral",
+  "profesor": "Jared Vásquez",
+  "salon": "3.3 - Edificio: El Lago",
+  "horario": "10:00 AM - 12:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Cálculo Multivariado",
+  "profesor": "Jared Vásquez",
+  "salon": "2.1 - Edificio: El Lago",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Optimización Matemática",
+  "profesor": "Jared Vásquez",
+  "salon": "2.2 - Edificio: El Lago",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles"
+  ]
+},{
+  "curso": "Optimización Matemática",
+  "profesor": "Ulrich Nielsen",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Teología",
+  "profesor": "Zeke Landon",
+  "salon": "1.8 - Edificio: El Samán",
+  "horario": "10:00 AM - 12:00 PM",
+  "dias": [
+    "Lunes"
+  ]
+},{
+  "curso": "Ética",
+  "profesor": "Jared Vásquez",
+  "salon": "3.7 - Edificio: Almendros",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Viernes"
+  ]
+},{
+  "curso": "Ética",
+  "profesor": "Mikaela Stone",
+  "salon": "3.1 - Edificio: Almendros",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Miércoles"
+  ]
+},{
+  "curso": "Trabajo de Grado",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Práctica Estudiantil",
+  "profesor": "Jared Vásquez",
+  "salon": "1.6 - Edificio: El Samán",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Viernes"
+  ]
+}]

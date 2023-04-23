@@ -1,35 +1,79 @@
 ---
-title: "Untitled"
-author: "Camilo Vega"
-date: "2023-04-18"
-output: pdf_document
+title:  'Ejercicio Oracle Database'
+author:
+  - José Julián Barbosa Ayala
+  - Michael Hernández Vera
+  - Camilo Vega Ramírez
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 3
+toc-title: "Contenido"
+linkcolor: blue
+header-includes:
+  - \usepackage{fontspec}
+  - \setmonofont{Consolas}
+  - \renewcommand{\and}{\\}
 ---
 
-```{r}
-
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(jsonlite)
+library(knitr)
+library(kableExtra)
 ```
 
-#Punto A
-```{bash eval=FALSE}
+\newpage
+
+# Introducción.
+
+A continuación, presentamos el desarrollo de la actividad de MongoDB. Para cada uno de los puntos, se muestra el código de consulta en MongoDB, el resultado en formato JSON, que se utiliza para la comunicación entre sistemas, y también se muestra el resultado en formato tabular, el cual ha sido transformado utilizando R para facilitar su lectura por parte de los humanos.
+
+---
+
+# Punto A
+
+> *Obtener la lista de los cursos ofrecidos en la carrera de **Ingeniería de Sistemas.** Se deben obtener los siguientes datos: nombre del curso, nombre completo del profesor que dicta el curso, el salón en que se dicta el curso y la hora en la que se dicta el curso.*
+
+## Query
+
+***NOTA:*** Se entiende que la solicitud de *"cursos ofrecidos"* incluye todos los cursos listados por la carrera, independientemente de si tienen o no profesores u horarios asignados. Consideramos que el propósito de la consulta es revisar el estado de los cursos y, en caso de que alguno no tenga asignado un profesor o un horario, solucionar esta situación. Si se desea filtrar únicamente aquellos cursos con profesores y horarios asignados, se puede agregar al final de la consulta una instrucción \$match de la siguiente forma `\$and: [{ profesor: { \$ne: null } }, { salon: { \$ne: null } }]`. Igualmente, es importante tener en cuenta que hay dos cursos que aparecen duplicados debido a que tienen diferentes profesores y horarios: *"Ética"* y *"Optimización Matemática"*. Se decide no agruparlos  con un \$group para mostrarlos como cursos individuales, ya que hay más cursos que cuentan con un solo porfesor que aquellos que cuentan con dos. Por último, se puede observar que para todos los cursos de la colección "cursos" que tienen un calendario de dos o más días, tanto los edificios como los salones y horarios son los mismos. Por lo tanto, en la salida se decidió mostrar un solo salón con un horario único por curso, y se guardan los días en un array, con el fin de ahorrar espacio en la salida. Si en el futuro esta situación cambia, se puede modificar el "Stage 6 $project" para eliminar esta unificación y mostrar el calendario tal como se recibe del "Stage 5".
+
+
+
+```{python eval=FALSE}
 use university
 
-db.carreras.aggregate([
+var PuntoA = db.carreras.aggregate([
   {
     $match:
       /**
-       * query: The query in MQL.
+       * Stage 1:
+       * Se filtra por la carrera de "Ingeniería de Sistemas"
        */
       {
         nombre: "Ingeniería de Sistemas",
       },
   },
   {
+    $lookup:
+      /**
+       * Stage 2:
+       * Unimos con la colección cursos por el id del curso.
+       */
+      {
+        from: "cursos",
+        localField: "cursos.curso",
+        foreignField: "_id",
+        as: "cursos",
+      },
+  },
+  {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 3:
+       * Pasamos el array cursos a objeto.
        */
       {
         path: "$cursos",
@@ -37,175 +81,386 @@ db.carreras.aggregate([
       },
   },
   {
-    $project:
-      /**
-       * specifications: The fields to
-       *   include or exclude.
-       */
-      {
-        curso: "$cursos.curso",
-      },
-  },
-  {
     $lookup:
       /**
-       * from: The target collection.
-       * localField: The local join field.
-       * foreignField: The target join field.
-       * as: The name for the results.
-       * pipeline: Optional pipeline to run on the foreign collection.
-       * let: Optional variables to use in the pipeline field stages.
-       */
-      {
-        from: "cursos",
-        localField: "curso",
-        foreignField: "_id",
-        as: "curso",
-      },
-  },
-  {
-    $unwind:
-      /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
-       */
-      {
-        path: "$curso",
-        preserveNullAndEmptyArrays: true,
-      },
-  },
-  {
-    $lookup:
-      /**
-       * from: The target collection.
-       * localField: The local join field.
-       * foreignField: The target join field.
-       * as: The name for the results.
-       * pipeline: Optional pipeline to run on the foreign collection.
-       * let: Optional variables to use in the pipeline field stages.
+       * Stage 4:
+       * Unimos con colleción profesores por el id del profesor.
        */
       {
         from: "profesores",
-        localField: "curso.profesor",
+        localField: "cursos.profesor",
         foreignField: "_id",
-        as: "profesor",
+        as: "cursos.profesor",
       },
   },
   {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 5:
+       * Pasamos el array cursos.profesor a objeto.
        */
       {
-        path: "$profesor",
+        path: "$cursos.profesor",
         preserveNullAndEmptyArrays: true,
       },
   },
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 6: 
+       * Se genera el formato de salida por curso, profesor, salon, horrario,
+       * y array de los dias en los cuales se dicta el curso.
        */
       {
         _id: 0,
-        curso: "$curso.nombre",
-        profesor: "$profesor.nombre",
+        curso: "$cursos.nombre",
+        profesor: "$cursos.profesor.nombre",
         salon: {
           $concat: [
             {
               $arrayElemAt: [
-                "$curso.calendario.salon",
+                "$cursos.calendario.salon",
                 0,
               ],
             },
             " - Edificio: ",
             {
               $arrayElemAt: [
-                "$curso.calendario.edificio",
+                "$cursos.calendario.edificio",
                 0,
               ],
             },
           ],
         },
-        dias: "$curso.calendario.dia",
         horario: {
           $concat: [
             {
               $arrayElemAt: [
-                "$curso.calendario.inicio",
+                "$cursos.calendario.inicio",
                 0,
               ],
             },
-            " - Edificio: ",
+            " - ",
             {
               $arrayElemAt: [
-                "$curso.calendario.fin",
+                "$cursos.calendario.fin",
                 0,
               ],
             },
           ],
         },
+        dias: "$cursos.calendario.dia",
       },
   },
-  {
-    $group:
-      /**
-       * _id: The id of the group.
-       * fieldN: The first field name.
-       */
-      {
-        _id: "$curso",
-        grupos: {
-          $push: "$$ROOT",
-        },
-      },
-  },
-  {
-    $project:
-      /**
-       * specifications: The fields to
-       *   include or exclude.
-       */
-      {
-        _id: 0,
-        curso: "$_id",
-        grupos: {
-          $map: {
-            input: "$grupos",
-            as: "grupo",
-            in: {
-              profesor: "$$grupo.profesor",
-              salon: "$$grupo.salon",
-              dias: "$$grupo.dias",
-              horario: "$$grupo.horario",
-            },
-          },
-        },
-      },
-  },
-])
+]).toArray();
+
+cat("PuntoA.json", tojson(PuntoA));
+print(PuntoA);
+
 ```
 
+## Resultado JSON
+
+```{r echo=FALSE, paged.print=TRUE}
+prettify('[{
+  "curso": "Introducción a la Programación",
+  "profesor": "Ben Stone",
+  "salon": "1.4 - Edificio: El Lago",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Introducción al Modelado de Sistemas",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Estructuras de Datos",
+  "profesor": "Ben Stone",
+  "salon": "3.4 - Edificio: Almendros",
+  "horario": "10:00 AM - 12:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Técnicas y Prácticas de Programación",
+  "profesor": "Ben Stone",
+  "salon": "3.4 - Edificio: Almendros",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles"
+  ]
+},{
+  "curso": "Programación Orientada a Objetos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Lógica Digital y Lenguaje Máquina",
+  "profesor": "Grace Stone",
+  "salon": "1.2 - Edificio: El Lago",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Miércoles",
+    "Viernes"
+  ]
+},{
+  "curso": "Programación Funcional",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Lógica para Ciencias de la Computación",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Árboles y Grafos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Arquitectura del Computador",
+  "profesor": "Grace Stone",
+  "salon": "2.6 - Edificio: El Lago",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Lunes",
+    "Viernes"
+  ]
+},{
+  "curso": "Diseño de Interfaces Humano-Computador",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Computabilidad y Complejidad",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Computación Gráfica",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Comunicación de Datos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Desarrollo Formal de Sistemas",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Análisis y Diseño de Algoritmos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Gestión y Modelación de Datos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Sistemas Operativos",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Programación Paralela",
+  "profesor": "Ulrich Nielsen",
+  "salon": "3.3 - Edificio: Palmas",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Aprendizaje Automático",
+  "profesor": "Robert Vance",
+  "salon": "1.1 - Edificio: El Samán",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Animación y Simulación",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Introducción a la Seguridad Informática",
+  "profesor": "Robert Vance",
+  "salon": "3.5 - Edificio: Palmas",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Miércoles",
+    "Viernes"
+  ]
+},{
+  "curso": "Construcción de Software y Pruebas",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Sistemas Inteligentes",
+  "profesor": "Robert Vance",
+  "salon": "2.2 - Edificio: Cedro Rosado",
+  "horario": "10:00 AM - 12:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles"
+  ]
+},{
+  "curso": "Computación en la Nube",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Desarrollo de Videojuegos",
+  "profesor": "Ben Stone",
+  "salon": "3.2 - Edificio: Palmas",
+  "horario": "02:00 PM - 05:00 PM",
+  "dias": [
+    "Martes",
+    "Viernes"
+  ]
+},{
+  "curso": "Cinemática y Dinámica",
+  "profesor": "Saanvi Bahl",
+  "salon": "2.2 - Edificio: El Lago",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles"
+  ]
+},{
+  "curso": "Electricidad y Magnetismo",
+  "profesor": "Saanvi Bahl",
+  "salon": "1.5 - Edificio: El Lago",
+  "horario": "04:00 PM - 06:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles",
+    "Viernes"
+  ]
+},{
+  "curso": "Cálculo Diferencial",
+  "profesor": "Grace Stone",
+  "salon": "2.5 - Edificio: El Lago",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Álgebra Lineal",
+  "profesor": "Grace Stone",
+  "salon": "3.1 - Edificio: El Lago",
+  "horario": "10:00AM - 12:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Cálculo Integral",
+  "profesor": "Jared Vásquez",
+  "salon": "3.3 - Edificio: El Lago",
+  "horario": "10:00 AM - 12:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Cálculo Multivariado",
+  "profesor": "Jared Vásquez",
+  "salon": "2.1 - Edificio: El Lago",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Martes",
+    "Jueves"
+  ]
+},{
+  "curso": "Optimización Matemática",
+  "profesor": "Jared Vásquez",
+  "salon": "2.2 - Edificio: El Lago",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Lunes",
+    "Miércoles"
+  ]
+},{
+  "curso": "Optimización Matemática",
+  "profesor": "Ulrich Nielsen",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Teología",
+  "profesor": "Zeke Landon",
+  "salon": "1.8 - Edificio: El Samán",
+  "horario": "10:00 AM - 12:00 PM",
+  "dias": [
+    "Lunes"
+  ]
+},{
+  "curso": "Ética",
+  "profesor": "Jared Vásquez",
+  "salon": "3.7 - Edificio: Almendros",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Viernes"
+  ]
+},{
+  "curso": "Ética",
+  "profesor": "Mikaela Stone",
+  "salon": "3.1 - Edificio: Almendros",
+  "horario": "08:00 AM - 10:00 AM",
+  "dias": [
+    "Miércoles"
+  ]
+},{
+  "curso": "Trabajo de Grado",
+  "salon": null,
+  "horario": null
+},{
+  "curso": "Práctica Estudiantil",
+  "profesor": "Jared Vásquez",
+  "salon": "1.6 - Edificio: El Samán",
+  "horario": "02:00 PM - 04:00 PM",
+  "dias": [
+    "Viernes"
+  ]
+}]', indent  = 1)
+
+```
+
+## Resultado Tabular
+
+```{r}
+fromJSON('PuntoA.json', flatten = T) |> 
+  mutate(dias = map_chr(dias, ~str_c(., collapse = "// "))) |> 
+  arrange(curso, profesor) |> 
+  select(curso, profesor, salon, horario, dias) |> 
+  kable("latex", booktabs=T, linesep = "", longtable = TRUE) |> 
+  kable_styling(position = "center", 
+                latex_options = c("HOLD_position", "repeat_header", 
+                                  "striped")) |> 
+  column_spec(1, width = "10em") |> 
+  column_spec(6, width = "6em") |> 
+  column_spec(4, width = "6em")|> 
+  column_spec(5, width = "6em")
+```
+
+---
 
 # Punto B
 
-```{bash eval=FALSE}
+> *Obtener la lista de profesores que dictan cursos en **dos** carreras diferentes. Se deben obtener los siguientes datos: nombre completo del profesor, nombre del curso que dicta y nombre de la carrera a la que pertenece el curso.*
+
+## Query
+
+***NOTA:*** Se entiende que la solicitud consiste en obtener aquellos profesores que imparten cursos exclusivamente en dos carreras. Como todos los profesores que aparecen en el resultado dictan cursos en dos carreras y tienen múltiples cursos por carrera, se han dejado los datos anidados en formato JSON para aprovechar esta funcionalidad propia de MongoDB que facilita la comunicación entre sistemas. No obstante, para facilitar la lectura humana en el resultado en formato tabular se muestran los datos desanidados.
+
+```{python eval=FALSE}
 use university
 
-db.carreras.aggregate([
+var PuntoB = db.carreras.aggregate([
   {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 1:
+       * Se saca la lista completa de cursos por carrera.
        */
       {
         path: "$cursos",
@@ -215,8 +470,8 @@ db.carreras.aggregate([
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 2:
+       * Se dejan solo los cambos de nombre de carrera e id del curso.
        */
       {
         _id: 0,
@@ -227,12 +482,8 @@ db.carreras.aggregate([
   {
     $lookup:
       /**
-       * from: The target collection.
-       * localField: The local join field.
-       * foreignField: The target join field.
-       * as: The name for the results.
-       * pipeline: Optional pipeline to run on the foreign collection.
-       * let: Optional variables to use in the pipeline field stages.
+       * Stage 3:
+       * Unimos con la coleción curso por id del curso.
        */
       {
         from: "cursos",
@@ -244,10 +495,8 @@ db.carreras.aggregate([
   {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 4:
+       * Pasamos el array curso a objeto.
        */
       {
         path: "$curso",
@@ -257,8 +506,9 @@ db.carreras.aggregate([
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 5:
+       * Dejamos lo campos de interes carrera, nombre del curso e id del 
+       * profesor.
        */
       {
         _id: 0,
@@ -270,12 +520,8 @@ db.carreras.aggregate([
   {
     $lookup:
       /**
-       * from: The target collection.
-       * localField: The local join field.
-       * foreignField: The target join field.
-       * as: The name for the results.
-       * pipeline: Optional pipeline to run on the foreign collection.
-       * let: Optional variables to use in the pipeline field stages.
+       * Stage 6:
+       * Unimos con la colección profesores por id del profesor.
        */
       {
         from: "profesores",
@@ -287,10 +533,8 @@ db.carreras.aggregate([
   {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 7:
+       * Pasamos e array profesor a objeto
        */
       {
         path: "$profesor",
@@ -300,8 +544,8 @@ db.carreras.aggregate([
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 8: Dejamos lo campos de interes nombre del profesor, carrera y
+       * curso
        */
       {
         profesor: "$profesor.nombre",
@@ -312,8 +556,9 @@ db.carreras.aggregate([
   {
     $group:
       /**
-       * _id: The id of the group.
-       * fieldN: The first field name.
+       * Stage 9:
+       * Agrupamos por profesor y carrera obteniendo un array de cursos de esa
+       * combinación
        */
       {
         _id: {
@@ -328,8 +573,9 @@ db.carreras.aggregate([
   {
     $group:
       /**
-       * _id: The id of the group.
-       * fieldN: The first field name.
+       * Stage 10:
+       * Agrupamos por solo el profesor, colocando en un array la lista de 
+       * carreras en las que dicta el profesor con sus respectivos cursos
        */
       {
         _id: "$_id.profesor",
@@ -344,8 +590,8 @@ db.carreras.aggregate([
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 11:
+       * cambiamos visualmente el _id a profesor
        */
       {
         _id: 0,
@@ -356,7 +602,9 @@ db.carreras.aggregate([
   {
     $match:
       /**
-       * query: The query in MQL.
+       * Stage 12
+       * Filtramos por aquellos profesoores cullos conteos de carreras sean
+       * igual a 2
        */
       {
         $expr: {
@@ -369,18 +617,106 @@ db.carreras.aggregate([
         },
       },
   },
-])
+]).toArray();
+
+cat("PuntoB.json", tojson(PuntoB));
+print(PuntoB);
+
 ```
 
-# punto c
-```{bash eval=FALSE}
+
+## Resultado JSON
+
+```{r echo=FALSE, paged.print=TRUE}
+prettify('[{
+  "profesor": "Ben Stone",
+  "careras_cursos": [
+    {
+      "carrera": "Matemáticas Aplicadas",
+      "cursos": [
+        "Estructuras de Datos"
+      ]
+    },
+    {
+      "carrera": "Ingeniería de Sistemas",
+      "cursos": [
+        "Desarrollo de Videojuegos",
+        "Introducción a la Programación",
+        "Estructuras de Datos",
+        "Técnicas y Prácticas de Programación"
+      ]
+    }
+  ]
+},{
+  "profesor": "Claudia Tiedemann",
+  "careras_cursos": [
+    {
+      "carrera": "Matemáticas Aplicadas",
+      "cursos": [
+        "Álgebra Moderna"
+      ]
+    },
+    {
+      "carrera": "Ingeniería Mecánica",
+      "cursos": [
+        "Propiedades de los Materiales",
+        "Diseño Mecánico",
+        "Máquinas Térmicas e Hidráulicas"
+      ]
+    }
+  ]
+},{
+  "profesor": "Ulrich Nielsen",
+  "careras_cursos": [
+    {
+      "carrera": "Ingeniería de Sistemas",
+      "cursos": [
+        "Programación Paralela",
+        "Optimización Matemática"
+      ]
+    },
+    {
+      "carrera": "Matemáticas Aplicadas",
+      "cursos": [
+        "Optimización Matemática"
+      ]
+    }
+  ]
+}]', indent  = 1)
+
+```
+
+## Resultado Tabular
+
+```{r}
+fromJSON('PuntoB.json', flatten = T) |> 
+  unnest(careras_cursos, keep_empty = T) |> 
+  unnest(cursos, keep_empty = T) |> 
+  arrange(profesor, carrera, cursos) |> 
+  kable("latex", booktabs= T, linesep = "", longtable = TRUE) |> 
+  kable_styling(position = "center", 
+                latex_options = c("HOLD_position", "repeat_header", 
+                                  "striped")) 
+```
+
+---
+
+# Punto C
+
+## Query
+
+***NOTA:*** Este query parte del supuesto de que un estudiante únicamente puede inscribirse en cursos de su carrera correspondientes a un semestre igual o anterior al que actualmente está cursando. Además, tras realizar el ejercicio de la documentación, se ha detectado que la colección de `cursos` incluye el campo `cupo`. Asumimos que si un curso no cuenta con este campo, significa que ya se ha completado su cupo y no es posible inscribirse en él.
+
+
+```{python eval=FALSE}
 use university
 
-db.estudiantes.aggregate([
+var PuntoC = db.estudiantes.aggregate([
   {
     $match:
       /**
-       * query: The query in MQL.
+       * Stage 1:
+       * Filtramos por un estudiante.
        */
       {
         nombre: "Olive Stone",
@@ -389,10 +725,8 @@ db.estudiantes.aggregate([
   {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 2:
+       * Pasamos el array carreras un objeto.
        */
       {
         path: "$carreras",
@@ -402,12 +736,8 @@ db.estudiantes.aggregate([
   {
     $lookup:
       /**
-       * from: The target collection.
-       * localField: The local join field.
-       * foreignField: The target join field.
-       * as: The name for the results.
-       * pipeline: Optional pipeline to run on the foreign collection.
-       * let: Optional variables to use in the pipeline field stages.
+       * Stage 3:
+       * Unimos con la colección carreras por el id de la carrera
        */
       {
         from: "carreras",
@@ -419,10 +749,8 @@ db.estudiantes.aggregate([
   {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 4:
+       * Pasamos el array carrras a un objeto.
        */
       {
         path: "$carreras",
@@ -432,8 +760,11 @@ db.estudiantes.aggregate([
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 5: 
+       * Seleccionamos los campos de interes estudiante, carrera, semestre,
+       * creamos el array cursos_carrera que contiene todos los cursos que ofrece
+       * la carrera y cramos el array cursos_inscritos que contiene los curso ya
+       * que el estudiente ya ha inscrito.
        */
       {
         _id: 0,
@@ -447,8 +778,10 @@ db.estudiantes.aggregate([
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 6:
+       * Seleccionamos la carrera y aquellos registros de curso_carrera cuyo 
+       * semestre es menor o igual al semestre del estudiante y que no se 
+       * encuentren contenidos en la lista de cursos que ya matriculó este.
        */
       {
         carrera: "$carrera",
@@ -481,10 +814,8 @@ db.estudiantes.aggregate([
   {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 7:
+       * Listamos individualmente los cursos contenidos en cursos_carrera.
        */
       {
         path: "$cursos_carrera",
@@ -494,8 +825,8 @@ db.estudiantes.aggregate([
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 8:
+       * Seleccionams los campos de interes carreram semestre e id del curso.
        */
       {
         carrera: "$carrera",
@@ -506,12 +837,8 @@ db.estudiantes.aggregate([
   {
     $lookup:
       /**
-       * from: The target collection.
-       * localField: The local join field.
-       * foreignField: The target join field.
-       * as: The name for the results.
-       * pipeline: Optional pipeline to run on the foreign collection.
-       * let: Optional variables to use in the pipeline field stages.
+       * Stage 9:
+       * Unimos con la colección cursos por el id del curso.
        */
       {
         from: "cursos",
@@ -521,12 +848,22 @@ db.estudiantes.aggregate([
       },
   },
   {
+    $match:
+      /**
+       * Stage 10:
+       * Dejamos solo aquellos cursos que cuentan con cupos para ser matriculados.
+       */
+      {
+        "curso.cupo": {
+          $gt: 0,
+        },
+      },
+  },
+  {
     $unwind:
       /**
-       * path: Path to the array field.
-       * includeArrayIndex: Optional name for index.
-       * preserveNullAndEmptyArrays: Optional
-       *   toggle to unwind null and empty values.
+       * Stage 11:
+       * Pasamos el array curso a un objeto.
        */
       {
         path: "$curso",
@@ -536,8 +873,8 @@ db.estudiantes.aggregate([
   {
     $project:
       /**
-       * specifications: The fields to
-       *   include or exclude.
+       * Stage 12:
+       * Seleccionamos los campos de interes curso, carrera y semestre.
        */
       {
         curso: "$curso.nombre",
@@ -545,6 +882,38 @@ db.estudiantes.aggregate([
         semestre: "$semestre",
       },
   },
-])
+]).toArray();
+
+cat("PuntoC.json", tojson(PuntoC));
+print(PuntoC);
+
 ```
 
+## Resultado JSON
+
+```{r echo=FALSE, paged.print=TRUE}
+prettify('[{
+  "curso": "Estructuras de Datos",
+  "carrera": "Matemáticas Aplicadas",
+  "semestre": 2
+},{
+  "curso": "Álgebra Moderna",
+  "carrera": "Matemáticas Aplicadas",
+  "semestre": 4
+},{
+  "curso": "Estadística Aplicada",
+  "carrera": "Matemáticas Aplicadas",
+  "semestre": 5
+}]', indent  = 1)
+
+```
+
+## Resultado Tabular
+
+```{r}
+fromJSON('PuntoC.json', flatten = T) |> 
+  kable("latex", booktabs= T, linesep = "", longtable = TRUE) |> 
+  kable_styling(position = "center", 
+                latex_options = c("HOLD_position", "repeat_header", 
+                                  "striped")) 
+```
