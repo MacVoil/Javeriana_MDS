@@ -1,0 +1,52 @@
+<Schema name="IATA_CUBE_SCHEMA">
+  <Cube name="IATA_CUBE_GRUPOA4" visible="true" cache="true" enabled="true">
+    <Table name="VUELOS" schema="IATA_DM">
+    </Table>
+    <Dimension type="StandardDimension" visible="true" foreignKey="ID_AEROLINEA" highCardinality="false" name="AEROLINEAS">
+      <Hierarchy name="AEROLINEAS" visible="true" hasAll="true" primaryKey="ID_AEROLINEA">
+        <Table name="AEROLINEAS" schema="IATA_DM">
+        </Table>
+        <Level name="AEROLINEA" visible="true" column="AEROLINEA" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension type="StandardDimension" visible="true" foreignKey="ID_CIUDAD_DESTINO" highCardinality="false" name="CIUDAD_DESTINO">
+      <Hierarchy name="CIUDAD_DESTINO" visible="true" hasAll="true" primaryKey="ID_CIUDAD_DESTINO">
+        <Table name="CIUDAD_DESTINIO" schema="IATA_DM">
+        </Table>
+        <Level name="CIUDAD_DESTINO" visible="true" column="CIUDAD_DESTINO" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension type="StandardDimension" visible="true" foreignKey="ID_CIUDAD_USUARIO" highCardinality="false" name="CIUDAD_USUARIO">
+      <Hierarchy name="CIUDAD_USUARIO" visible="true" hasAll="true" primaryKey="ID_CIUDAD_USUARIO">
+        <Table name="CIUDAD_USUARIO" schema="IATA_DM">
+        </Table>
+        <Level name="CIUDAD_USUARIO" visible="true" column="CIUDAD_USUARIO" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension type="TimeDimension" visible="true" foreignKey="FECHAS" highCardinality="false" name="FECHAS">
+      <Hierarchy name="FECHAS" visible="true" hasAll="true" primaryKey="FECHA">
+        <Table name="FECHAS" schema="IATA_DM">
+        </Table>
+        <Level name="ANNIO" visible="true" column="ANNIO" type="Integer" uniqueMembers="true" levelType="TimeYears" hideMemberIf="Never">
+        </Level>
+        <Level name="SEMESTRE" visible="true" column="SEMESTRE" type="Integer" uniqueMembers="false" levelType="TimeHalfYears" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Dimension type="StandardDimension" visible="true" foreignKey="ID_MODELOS" highCardinality="false" name="MODELOS">
+      <Hierarchy name="MODELOS" visible="true" hasAll="true" primaryKey="ID_MODELO">
+        <Table name="MODELOS" schema="IATA_DM">
+        </Table>
+        <Level name="MODELO" visible="true" column="MODELO" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+        </Level>
+      </Hierarchy>
+    </Dimension>
+    <Measure name="COSTO" column="COSTO" aggregator="sum" visible="true">
+    </Measure>
+    <Measure name="CANTIDAD" column="CANTIDAD" aggregator="count" visible="true">
+    </Measure>
+  </Cube>
+</Schema>

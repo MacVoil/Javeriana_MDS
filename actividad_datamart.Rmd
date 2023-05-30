@@ -1,0 +1,84 @@
+---
+title:  'Ejercicio DataMart'
+author:
+  - José Julián Barbosa Ayala
+  - Michael Hernández Vera
+  - Camilo Vega Ramírez
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 3
+toc-title: "Contenido"
+linkcolor: blue
+header-includes:
+  - \usepackage{fontspec}
+  - \setmonofont{Consolas}
+  - \renewcommand{\and}{\\}
+---
+
+\newpage
+
+# Logica creación modelo estrella.
+
+A continuación se explica de forma breve el proseso para llegar al modelo estrella seleccionado.
+
+## Modelo relacional original
+
+En la figura 1 podemos ver el modelo relacional original.
+
+<center>
+
+![Modelo relacional original](IATA/Modelo_Estrella_IATA.jpg)
+</center>
+
+Del miosmo vemos:
+
+* Los vuelos se relacionan con los itinerarios donde cada itenerario puede contar con varios vuelos.
+* Los vuelos se relacionan con los avonoes donde cada avión puede contar con varios vuelos.
+* Los vuelos se relacionan con los usuarios donde cada usuario puede realziar varios vuelos.
+* Los aviones se relacionan con los modelos donde cada modelo puede tener varios aviones.
+* Los aviones se relacionan con las aerolineas donde cada aerolinea puede tener varios aviones.
+* Los Usuarios se relacionan con las ciudades donde cada ciudad puede tener varios usuarios.
+* Los itinerarios se relacionan con los aeropuertos donde cada aeropuerto puede tener varios itienerarios de origen o varios itinerarios de destino
+* Los aeropuertos se relacionan con las ciudades donde cada ciudad puede tener varios aeropuertos.
+
+Se entiende que los vuelos hacen referencia a cada pasaje vendido a un usuario.
+
+## Requerimientos de analisis.
+
+Las siguientes son las preguntas a las cuales se quiere dar respuesta con este analisis:
+
+* ¿Cuál aerolínea realizó el mayor número de vuelos a la ciudad de Roma en el año 2019 y cuál en el año 2020?
+* Total de dinero recaudado por vuelos de cada aerolínea en el primer semestre del año 2019 y en el primer semestre del año 2020.
+* ¿Cuál modelo de avión realizó el mayor número de vuelos en el año 2019 y cuál en el año 2020?
+* ¿Cuál fue la ciudad cuyos habitantes viajaron más en el año 2019 y cuál en el año 2020?
+
+## Análisis de los hechos.
+
+De los requerimientos de analisis podemos ver que los hechos buscados estan relacionados con el conteo de vuelos y con el costo total de los vuelos, por lo cual la tabla principal de donde nos podemos basar es la de VUELOS.
+
+## Análisis de las dimensiones.
+
+De las pregunta de negocio se idenfician las dimenciones *aerolinea*, *ciudad de destino*, *fecha*, *modelo de avión*, *ciudad usuario*. Sobre estas cinco dimenciones se debe modelar para poder sacar de los hechos las cantidadees y total costo.
+
+## Análisis de los indicadores.
+
+Las dos medidas solicitadas son *cantidades* entendidas como el condeo de vuelos, y *total costo* entendido como la sumatorio del campo *costo* de cada vuelo.
+
+## Análisis de las jerarquías.
+
+Teniendo en cuenta las preguntas y las dimenciones, con la excepción de la *fecha* que cuenta con los nieveles fecha, año y semestre, nuestas demas jerarquias solo cuentan con un nivel de la sigiente forma.
+
+* AEROLINEAS
+* CIUDAD DESTINO
+* CIUDAD USUARIO
+* FECHAS -> AÑO -> SEMESTRE
+* MODELOS
+
+## Diagrama del Modelo.
+
+Teniendo en cuenta todo el analisis previo, nuestro diagrama de estrella cuenta en el centro con la tabla de hechos *VUELOS* con las medidas *COSTO* y *CANTIDAD* y los ids para relacionarlos con las dimenciones *AEROLINEAS*, *CIUDAD_DESTINO*, *CIUDAD_USUARIO*, *FECHA* y *MODELOS* como se ve en la figura 2.
+
+![Modelo Estrella Datamart](IATA/modelo_dm.jpg)
+Cabe notar que este modelo es creado a la medida para contestar a las preguntas de interes del presente caso.
