@@ -80,5 +80,136 @@ Teniendo en cuenta las preguntas y las dimenciones, con la excepción de la *fec
 
 Teniendo en cuenta todo el analisis previo, nuestro diagrama de estrella cuenta en el centro con la tabla de hechos *VUELOS* con las medidas *COSTO* y *CANTIDAD* y los ids para relacionarlos con las dimenciones *AEROLINEAS*, *CIUDAD_DESTINO*, *CIUDAD_USUARIO*, *FECHA* y *MODELOS* como se ve en la figura 2.
 
+<center>
+
 ![Modelo Estrella Datamart](IATA/modelo_dm.jpg)
+</center>
+
 Cabe notar que este modelo es creado a la medida para contestar a las preguntas de interes del presente caso.
+
+# Construcción Data Mart.
+
+Para la cosntrucción del Data Mart se uso Sql Developer construllendo el esquema IATA_DM y las tablas y columnas como se aprecian en la figura 3
+
+<center>
+
+![Data Mart SQL Developer](IATA/dm.jpg)
+</center>
+
+Se crean las llaves principales
+* AEROLINEAS_PK
+* CIUDAD_DESTINO_PK
+* CIUDAD_USUARIO_PK
+* FECHAS_PK
+* MODELOS_PK
+
+Igualmente se creán las llaves foraneas
+* AEROLINEAS_FK
+* CIUDAD_DESTINO_FK
+* CIUDAD_USUARIO_FK
+* FECHAS_FK
+* MODELOS_FK
+
+Las relaciones entre las tablas las llaves foraneas y llaves principales, asi como el timpo de datos se puede apreciar en el la grafica relacional del modelo estrella expuesto con anterioridad en la figura 2.
+
+# Construcción Cubo OLAP
+
+Para la construcción del cubo olap se uso la herramienta Pentaho Workbench. Se creó el cubo IATA_CUBE_GRUPO4A, a la cual se adiciona la tabla de hechos VUELOS, las dimenciones AROLINEAS con la jerarquia ARELOLINEA y la tabla AEROLINEAS, CIUDAD_DESTINO con la jerarquia CIUDAD_DESTINO y la tabla CIUDAD_DESTINO, CIUDAD_USUARIO con la jerarquia CIUDAD_USUARIO y la tabla CIUDAD_USUARIO, FECHAS con la jerarquias ANNIO, SEMESTRE y la tabla FECHAS, MODELOS con la jerarquia MODELOS y la tabla MODELOS, asi mismo las medidas COSTO que es la sumatoria de la columna COSTO de la tabla de hechos y la medida CANTIDA que es el conteo de la tabla CANTIDAD de la tabla de hechos. La estructura del cubo OLAP la podemos apreciar en la figura 4.
+
+<center>
+
+![Cubo Olap IATA_CUBE_GRUPOA4](IATA/CUBO.jpg)
+
+</center>
+
+# Proceso de ETL
+
+El ETL se realizo utilizado la herramienta Pentaho Integration Servises, para eso se realizo un flujo por cada uno de las tablas de dimenciones y tabla de hechos del Data Mart donde se créo un Input corespontiente a un query de SQL que estraxe los datos de la base IATA y los transforma y los deposita en el Data Mart IATA_DM como se ve en la figura 5.
+
+<center>
+
+![Flujo ETL IATA a IATA_dm](IATA/ETL.jpg)
+</center>
+
+Las queries utilizadas se pueden ver en las figuras 6 a 10.
+
+<center>
+
+![Query AEROLINEAS_EXT](IATA/AEROLINEAS_EXT.jpg)
+
+</center>
+
+<center>
+
+![Query CIUDAD_DESTINO_EXT](IATA/CIUDAD_DESTINO_EXT.jpg)
+
+</center>
+
+<center>
+
+![Quert CIUDAD_USUARIO_EXT](IATA/CIUDAD_USUARIO_EXT.jpg)
+
+</center>
+
+<center>
+
+![Query FECHAS_EXT](IATA/FECHAS_EXT.jpg)
+
+</center>
+
+<center>
+
+![VUELOS_EXT](IATA/VUELOS_EXT.jpg)
+
+</center>
+
+# Solución Requerimientos de analisis.
+
+Para dar respuesta a los requerimientos de analisis se uso la heramienta LinceBI a la cual se conecto el Data Mart IATA_DM y el cubo IATA_CUBE_GRUPOA4 para visualisar los resutados.
+
+## ¿Cuál aerolínea realizó el mayor número de vuelos a la ciudad de Roma en el año 2019 y cuál en el año 2020?
+
+En la figura 11 podemos ver la visualización creada para dar respuesta al requerimiento.
+
+<center>
+
+![Punto 1](IATA/Punto 1.jpg)
+
+</center>
+
+La aerolinea que realizo el mayor numero de vuelos a la ciudad de Roma en el año 2019 fue Avianca, para 2020 los datos suministrados no contienen vuelos a la ciudad de Roma.
+
+## Total de dinero recaudado por vuelos de cada aerolínea en el primer semestre del año 2019 y en el primer semestre del año 2020.
+
+En la figura 12 podemos ver la visualización creada para dar respuesta al requerimiento.
+
+<center>
+![Punto 2](IATA/Punto 2.jpg)
+
+</center>
+
+De la misma tabla de la figura 12 podemos ver los ingresos por reacudos de  cada una de las aerolinas para el primer semestre del año 2019 y 2020.
+
+## ¿Cuál modelo de avión realizó el mayor número de vuelos en el año 2019 y cuál en el año 2020?
+
+En la figura 13 podemos ver la visualización creada para dar respuesta al requerimiento.
+
+<center>
+![Punto 3](IATA/Punto 3.jpg)
+
+</center>
+
+En tanto en el año 2019 como en el 2020, el modelo de avión que realizó el mayor número de vuelos fue el Airbus 320.
+
+## ¿Cuál fue la ciudad cuyos habitantes viajaron más en el año 2019 y cuál en el año 2020?
+
+En la figura 14 podemos ver la visualización creada para dar respuesta al requerimiento.
+
+<center>
+![Punto 4](IATA/Punto 4.jpg){width=300px}
+
+</center>
+
+En tanto en el año 2019 como en el 2020 los habitandes de la ciudad de Medellin fueron los que realizarón el mayor número de vuelos.
+
+
