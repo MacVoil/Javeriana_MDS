@@ -19,102 +19,117 @@ header-includes:
 
 \newpage
 
-# Logica creación modelo estrella.
+# Lógica de creación del modelo estrella
 
-A continuación se explica de forma breve el proseso para llegar al modelo estrella seleccionado.
+A continuación, se explicará de forma breve el proceso para llegar al modelo estrella seleccionado.
 
 ## Modelo relacional original
 
-En la figura 1 podemos ver el modelo relacional original.
+En la Figura 1, se muestra el modelo relacional original.
 
 <center>
 
 ![Modelo relacional original](IATA/Modelo_Estrella_IATA.jpg)
 </center>
 
-Del miosmo vemos:
+Del mismo modo, podemos observar las siguientes relaciones en el modelo:
 
-* Los vuelos se relacionan con los itinerarios donde cada itenerario puede contar con varios vuelos.
-* Los vuelos se relacionan con los avonoes donde cada avión puede contar con varios vuelos.
-* Los vuelos se relacionan con los usuarios donde cada usuario puede realziar varios vuelos.
-* Los aviones se relacionan con los modelos donde cada modelo puede tener varios aviones.
-* Los aviones se relacionan con las aerolineas donde cada aerolinea puede tener varios aviones.
-* Los Usuarios se relacionan con las ciudades donde cada ciudad puede tener varios usuarios.
-* Los itinerarios se relacionan con los aeropuertos donde cada aeropuerto puede tener varios itienerarios de origen o varios itinerarios de destino
-* Los aeropuertos se relacionan con las ciudades donde cada ciudad puede tener varios aeropuertos.
+  * Los vuelos se relacionan con los itinerarios, donde cada itinerario puede contar con varios vuelos.
+  * Los vuelos se relacionan con los aviones, donde cada avión puede tener varios vuelos.
+  * Los vuelos se relacionan con los usuarios, donde cada usuario puede realizar varios vuelos.
+  * Los aviones se relacionan con los modelos, donde cada modelo puede tener varios aviones.
+  * Los aviones se relacionan con las aerolíneas, donde cada aerolínea puede tener varios aviones.
+  * Los usuarios se relacionan con las ciudades, donde cada ciudad puede tener varios usuarios.
+  * Los itinerarios se relacionan con los aeropuertos, donde cada aeropuerto puede tener varios itinerarios de origen o varios itinerarios de destino.
+  * Los aeropuertos se relacionan con las ciudades, donde cada ciudad puede tener varios aeropuertos.
 
 Se entiende que los vuelos hacen referencia a cada pasaje vendido a un usuario.
 
-## Requerimientos de analisis.
+## Requerimientos de análisis
 
-Las siguientes son las preguntas a las cuales se quiere dar respuesta con este analisis:
+A continuación, se presentan las preguntas a las cuales se busca dar respuesta mediante este análisis:
 
 * ¿Cuál aerolínea realizó el mayor número de vuelos a la ciudad de Roma en el año 2019 y cuál en el año 2020?
 * Total de dinero recaudado por vuelos de cada aerolínea en el primer semestre del año 2019 y en el primer semestre del año 2020.
 * ¿Cuál modelo de avión realizó el mayor número de vuelos en el año 2019 y cuál en el año 2020?
 * ¿Cuál fue la ciudad cuyos habitantes viajaron más en el año 2019 y cuál en el año 2020?
 
-## Análisis de los hechos.
+## Análisis de los hechos
 
-De los requerimientos de analisis podemos ver que los hechos buscados estan relacionados con el conteo de vuelos y con el costo total de los vuelos, por lo cual la tabla principal de donde nos podemos basar es la de VUELOS.
+De los requerimientos de análisis, podemos observar que los hechos buscados están relacionados con el conteo de vuelos y el costo total de los vuelos. Por lo tanto, la tabla principal en la que nos podemos basar es la de VUELOS.
 
-## Análisis de las dimensiones.
+## Análisis de las dimensiones
 
-De las pregunta de negocio se idenfician las dimenciones *aerolinea*, *ciudad de destino*, *fecha*, *modelo de avión*, *ciudad usuario*. Sobre estas cinco dimenciones se debe modelar para poder sacar de los hechos las cantidadees y total costo.
+De las preguntas de negocio identificamos las dimensiones: aerolínea, ciudad de destino, fecha, modelo de avión y ciudad del usuario. Estas cinco dimensiones deben ser modeladas para poder extraer las cantidades y el costo total de los hechos.
 
-## Análisis de los indicadores.
+## Análisis de los indicadores
 
-Las dos medidas solicitadas son *cantidades* entendidas como el condeo de vuelos, y *total costo* entendido como la sumatorio del campo *costo* de cada vuelo.
+Las dos medidas solicitadas son cantidades, entendidas como el conteo de vuelos, y total costo, entendido como la suma del campo costo de cada vuelo.
 
 ## Análisis de las jerarquías.
 
-Teniendo en cuenta las preguntas y las dimenciones, con la excepción de la *fecha* que cuenta con los nieveles fecha, año y semestre, nuestas demas jerarquias solo cuentan con un nivel de la sigiente forma.
+Análisis de las jerarquías
 
-* AEROLINEAS
-* CIUDAD DESTINO
-* CIUDAD USUARIO
-* FECHAS -> AÑO -> SEMESTRE
-* MODELOS
+Teniendo en cuenta las preguntas y dimensiones identificadas, a excepción de la dimensión fecha, que cuenta con los niveles de fecha, año y semestre, las demás jerarquías cuentan con un solo nivel de la siguiente forma:
 
-## Diagrama del Modelo.
+  * AEROLINEAS
+  * CIUDAD DESTINO
+  * CIUDAD USUARIO
+  * FECHAS -> ANNIO -> SEMESTRE
+  * MODELOS
 
-Teniendo en cuenta todo el analisis previo, nuestro diagrama de estrella cuenta en el centro con la tabla de hechos *VUELOS* con las medidas *COSTO* y *CANTIDAD* y los ids para relacionarlos con las dimenciones *AEROLINEAS*, *CIUDAD_DESTINO*, *CIUDAD_USUARIO*, *FECHA* y *MODELOS* como se ve en la figura 2.
+## Diagrama del Modelo
+
+Teniendo en cuenta todo el análisis previo, nuestro diagrama de estrella presenta en el centro la tabla de hechos VUELOS, que incluye las medidas COSTO y CANTIDAD, junto con los identificadores para relacionarla con las dimensiones AEROLINEAS, CIUDAD_DESTINO, CIUDAD_USUARIO, FECHA y MODELOS, como se muestra en la Figura 2.
 
 <center>
 
 ![Modelo Estrella Datamart](IATA/modelo_dm.jpg)
 </center>
 
-Cabe notar que este modelo es creado a la medida para contestar a las preguntas de interes del presente caso.
+Cabe destacar que este modelo ha sido creado a medida para responder a las preguntas de interés del caso actual.
 
 # Construcción Data Mart.
 
-Para la cosntrucción del Data Mart se uso Sql Developer construllendo el esquema IATA_DM y las tablas y columnas como se aprecian en la figura 3
+Para la construcción del Data Mart se utilizó SQL Developer, creando el esquema IATA_DM y las tablas y columnas como se muestran en la Figura 3.
 
 <center>
 
 ![Data Mart SQL Developer](IATA/dm.jpg)
 </center>
 
-Se crean las llaves principales
+Se crean las claves primarias.
 * AEROLINEAS_PK
 * CIUDAD_DESTINO_PK
 * CIUDAD_USUARIO_PK
 * FECHAS_PK
 * MODELOS_PK
 
-Igualmente se creán las llaves foraneas
+Igualmente se crean las llaves foráneas.
 * AEROLINEAS_FK
 * CIUDAD_DESTINO_FK
 * CIUDAD_USUARIO_FK
 * FECHAS_FK
 * MODELOS_FK
 
-Las relaciones entre las tablas las llaves foraneas y llaves principales, asi como el timpo de datos se puede apreciar en el la grafica relacional del modelo estrella expuesto con anterioridad en la figura 2.
+Las relaciones entre las tablas, las llaves foráneas y las llaves primarias, así como el tipo de datos, se pueden apreciar en el gráfico relacional del modelo estrella presentado anteriormente en la Figura 2.
 
 # Construcción Cubo OLAP
 
-Para la construcción del cubo olap se uso la herramienta Pentaho Workbench. Se creó el cubo IATA_CUBE_GRUPO4A, a la cual se adiciona la tabla de hechos VUELOS, las dimenciones AROLINEAS con la jerarquia ARELOLINEA y la tabla AEROLINEAS, CIUDAD_DESTINO con la jerarquia CIUDAD_DESTINO y la tabla CIUDAD_DESTINO, CIUDAD_USUARIO con la jerarquia CIUDAD_USUARIO y la tabla CIUDAD_USUARIO, FECHAS con la jerarquias ANNIO, SEMESTRE y la tabla FECHAS, MODELOS con la jerarquia MODELOS y la tabla MODELOS, asi mismo las medidas COSTO que es la sumatoria de la columna COSTO de la tabla de hechos y la medida CANTIDA que es el conteo de la tabla CANTIDAD de la tabla de hechos. La estructura del cubo OLAP la podemos apreciar en la figura 4.
+Para la construcción del cubo OLAP, se utilizó la herramienta Pentaho Workbench. Se creó el cubo IATA_CUBE_GRUPO4A, al cual se agregó la tabla de hechos VUELOS y las dimensiones siguientes:
+
+  * Dimensión AEROLINEAS con la jerarquía AEROLINEA y la tabla AEROLINEAS.
+  * Dimensión CIUDAD_DESTINO con la jerarquía CIUDAD_DESTINO y la tabla CIUDAD_DESTINO.
+  * Dimensión CIUDAD_USUARIO con la jerarquía CIUDAD_USUARIO y la tabla CIUDAD_USUARIO.
+  * Dimensión FECHAS con las jerarquías AÑO, SEMESTRE y la tabla FECHAS.
+  * Dimensión MODELOS con la jerarquía MODELOS y la tabla MODELOS.
+
+Además, se incluyeron las medidas siguientes:
+
+  * Medida COSTO, que es la suma de la columna COSTO en la tabla de hechos.
+  * Medida CANTIDAD, que es el conteo de la tabla CANTIDAD en la tabla de hechos.
+
+La estructura completa del cubo OLAP se puede apreciar en la Figura 4.
 
 <center>
 
@@ -124,14 +139,14 @@ Para la construcción del cubo olap se uso la herramienta Pentaho Workbench. Se 
 
 # Proceso de ETL
 
-El ETL se realizo utilizado la herramienta Pentaho Integration Servises, para eso se realizo un flujo por cada uno de las tablas de dimenciones y tabla de hechos del Data Mart donde se créo un Input corespontiente a un query de SQL que estraxe los datos de la base IATA y los transforma y los deposita en el Data Mart IATA_DM como se ve en la figura 5.
+El proceso de ETL se llevó a cabo utilizando la herramienta Pentaho Integration Services. Para esto, se creó un flujo de trabajo para cada una de las tablas de dimensiones y la tabla de hechos del Data Mart. En cada flujo, se utilizó un componente de entrada (Input) que ejecuta una consulta SQL para extraer los datos de la base de datos IATA. Luego, se aplicaron transformaciones a los datos y se depositaron en el Data Mart IATA_DM, como se muestra en la Figura 5.
 
 <center>
 
 ![Flujo ETL IATA a IATA_dm](IATA/ETL.jpg)
 </center>
 
-Las queries utilizadas se pueden ver en las figuras 6 a 10.
+Las consultas utilizadas se pueden ver en las Figuras 6 a 10.
 
 <center>
 
@@ -163,13 +178,13 @@ Las queries utilizadas se pueden ver en las figuras 6 a 10.
 
 </center>
 
-# Solución Requerimientos de analisis.
+# Solución Requerimientos de análisis.
 
-Para dar respuesta a los requerimientos de analisis se uso la heramienta LinceBI a la cual se conecto el Data Mart IATA_DM y el cubo IATA_CUBE_GRUPOA4 para visualisar los resutados.
+Para dar respuesta a los requerimientos de análisis, se utilizó la herramienta LinceBI. Se estableció una conexión entre LinceBI y el Data Mart IATA_DM, así como con el cubo IATA_CUBE_GRUPOA4, con el fin de visualizar los resultados de manera efectiva y realizar análisis en base a los datos almacenados en el Data Mart y el cubo OLAP. La utilización de LinceBI permitió explorar y visualizar de manera interactiva los datos.
 
 ## ¿Cuál aerolínea realizó el mayor número de vuelos a la ciudad de Roma en el año 2019 y cuál en el año 2020?
 
-En la figura 11 podemos ver la visualización creada para dar respuesta al requerimiento.
+En la Figura 11 se muestra la visualización creada para dar respuesta al requerimiento.
 
 <center>
 
@@ -177,29 +192,29 @@ En la figura 11 podemos ver la visualización creada para dar respuesta al reque
 
 </center>
 
-La aerolinea que realizo el mayor numero de vuelos a la ciudad de Roma en el año 2019 fue Avianca, para 2020 los datos suministrados no contienen vuelos a la ciudad de Roma.
+La aerolínea que realizó el mayor número de vuelos a la ciudad de Roma en el año 2019 fue Avianca. Sin embargo, según los datos suministrados, para el año 2020 no se registraron vuelos a la ciudad de Roma.
 
 ## Total de dinero recaudado por vuelos de cada aerolínea en el primer semestre del año 2019 y en el primer semestre del año 2020.
 
-En la figura 12 podemos ver la visualización creada para dar respuesta al requerimiento.
+En la Figura 12 se muestra la visualización creada para dar respuesta al requerimiento.
 
 <center>
 ![Punto 2](IATA/Punto 2.jpg)
 
 </center>
 
-De la misma tabla de la figura 12 podemos ver los ingresos por reacudos de  cada una de las aerolinas para el primer semestre del año 2019 y 2020.
+En la misma tabla de la Figura 12 se pueden observar los ingresos por recaudos de cada una de las aerolíneas para el primer semestre de los años 2019 y 2020.
 
 ## ¿Cuál modelo de avión realizó el mayor número de vuelos en el año 2019 y cuál en el año 2020?
 
-En la figura 13 podemos ver la visualización creada para dar respuesta al requerimiento.
+En la Figura 13 se muestra la visualización creada para dar respuesta al requerimiento.
 
 <center>
 ![Punto 3](IATA/Punto 3.jpg)
 
 </center>
 
-En tanto en el año 2019 como en el 2020, el modelo de avión que realizó el mayor número de vuelos fue el Airbus 320.
+Tanto en el año 2019 como en el 2020, el modelo de avión que registró el mayor número de vuelos fue el Airbus 320.
 
 ## ¿Cuál fue la ciudad cuyos habitantes viajaron más en el año 2019 y cuál en el año 2020?
 
@@ -210,6 +225,18 @@ En la figura 14 podemos ver la visualización creada para dar respuesta al reque
 
 </center>
 
-En tanto en el año 2019 como en el 2020 los habitandes de la ciudad de Medellin fueron los que realizarón el mayor número de vuelos.
+Tanto en el año 2019 como en el 2020, los habitantes de la ciudad de Medellín fueron quienes realizaron el mayor número de vuelos.
 
+
+# Reflexión: Importancia de las herramientas de gestión de datos y los procesos ETL en el análisis y transformación de información.
+
+La implementación de herramientas como el datamart, el cubo OLAP y los procesos ETL resultan fundamentales en la gestión de diversas fuentes de datos y permiten organizarlos de manera eficiente para realizar procesos de análisis de datos a mediano o largo plazo. Estas herramientas ofrecen una estructura y una lógica de almacenamiento optimizada para consultas analíticas, lo que facilita la extracción de información valiosa de grandes volúmenes de datos.
+
+El datamart proporciona un entorno de datos específicamente diseñado para satisfacer las necesidades de análisis de un área o departamento en particular. Al construirlo sobre una base de datos relacional, se logra una estructura flexible que permite almacenar y gestionar datos históricos de forma eficiente. Además, el cubo OLAP permite la agregación y el análisis multidimensional de los datos del datamart, lo que facilita la visualización y el descubrimiento de patrones y tendencias.
+
+En cuanto a los procesos ETL, desempeñan un papel crucial en la transformación y carga de datos en el datamart. Estos procesos permiten extraer datos de diferentes fuentes, realizar las transformaciones necesarias para adaptarlos al esquema del datamart y cargarlos de manera eficiente. Esto asegura la integridad y calidad de los datos en el datamart, lo que a su vez garantiza resultados precisos en los análisis posteriores.
+
+Respecto a la posibilidad de utilizar procesos ETL para transformar datos de una base de datos relacional a una base de datos NoSQL, es importante destacar que los procesos ETL están diseñados específicamente para la extracción, transformación y carga de datos en entornos relacionales. Por lo tanto, su aplicación directa a una base de datos NoSQL puede no ser la solución más adecuada.
+
+NoSQL se refiere a una amplia gama de bases de datos que se diferencian de las bases de datos relacionales en su estructura y enfoque de almacenamiento. Estas bases de datos están diseñadas para manejar grandes volúmenes de datos no estructurados o semiestructurados de manera eficiente. En este contexto, los procesos ETL pueden no ser necesarios, ya que la estructura de datos en una base de datos NoSQL es más flexible y puede adaptarse directamente a los requisitos del análisis de datos sin la necesidad de transformaciones complejas.
 
