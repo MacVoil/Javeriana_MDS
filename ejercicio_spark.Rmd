@@ -1,0 +1,137 @@
+---
+title:  'Ejercicio Spark'
+author:
+  - José Julián Barbosa Ayala
+  - Michael Hernández Vera
+  - Camilo Vega Ramírez
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 3
+toc-title: "Contenido"
+linkcolor: blue
+header-includes:
+  - \usepackage{fontspec}
+  - \setmonofont{Consolas}
+  - \renewcommand{\and}{\\}
+---
+
+\newpage
+
+```{r}
+library(tidyverse)
+library(sparklyr)
+library(pdftools)
+library(tidytext)
+library(wordcloud)
+```
+
+
+```{r}
+texto <- pdf_text("TFG_ROMAN_ZAMORA_CARRERAS.pdf")
+class(texto)
+length(texto)
+
+
+texto <- texto[-c(5,63:71)]
+length(texto)
+head(texto,2)
+
+texto <- texto |> 
+  str_to_lower() |> 
+  str_replace_all("\n", " ") |> 
+  str_replace_all("[^a-záéíóúñ\\s]"," ") |> 
+  str_replace_all("\\s+", " ") |> 
+  str_trim()
+
+
+texto <- paste0(texto, collapse = " ")
+class(texto)
+length(texto)
+```
+
+
+```{r}
+texto_df <- tibble(texto = texto)
+class(texto_df)
+```
+
+```{r}
+Sys.setenv(JAVA_HOME="C:/Program Files/Java/jre-1.8")
+sc <- spark_connect(master = "local")
+```
+
+
+```{r}
+texto_df_spk <- copy_to(sc, texto_df,"texto_df_spk", overwrite = TRUE)
+```
+
+
+```{r}
+class(texto_df_spk)
+```
+
+```{r}
+palabras_df_spk <- texto_df_spk %>%
+  ft_tokenizer(
+    input_col = "texto",
+    output_col = "lista_palabras"
+  ) |> 
+  mutate(palabra = explode(lista_palabras)) |> 
+  select(palabra) |> 
+  compute("palabras_df_spk")
+```
+
+```{r}
+conteo_palabras <- palabras_df_spk |> 
+  count(palabra) |> 
+  ungroup() 
+
+conteo_palabras |> 
+  arrange(-n) |> 
+  head(10)
+```
+
+```{r}
+stop_words_es <- get_stopwords("es")
+
+stop_words_es_spk <- copy_to(sc, stop_words_es,"stop_words_es_spk", overwrite = TRUE)
+
+```
+
+```{r}
+conteo_palabras_real <- conteo_palabras |> 
+  anti_join(stop_words_es_spk,
+            by = c("palabra" = "word")) |> 
+  compute("conteo_palabras_real")
+
+conteo_palabras_real |> 
+  arrange(-n) |> 
+  head(30)
+```
+
+```{r}
+conteo_palabras_real_R <- collect(conteo_palabras_real)
+dim(conteo_palabras_real_R)
+```
+
+```{r}
+with(conteo_palabras_real_R |> 
+       arrange(-n) |> 
+       head(100),
+     wordcloud(
+       palabra,
+       n,
+       scale = c(2.5,.5),
+       colors = c("#999999", "#E69F00", "#56B4E9", "#56B4E9")
+     ))
+```
+
+
+
+```{r}
+spark_disconnect(sc)
+
+```
+
