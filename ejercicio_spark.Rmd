@@ -1,5 +1,5 @@
 ---
-title:  'Ejercicio Spark'
+title:  'Ejercicio Procesamiento Distribuido'
 author:
   - José Julián Barbosa Ayala
   - Michael Hernández Vera
@@ -21,56 +21,88 @@ header-includes:
 
 # Introducción
 
-Para a actividad e contedo de palabras se selecciono el trabajo de grado "Apoyo Tecnológico en la Inversión en Renta Variable" escrito por Román Zamora Carreras para la obtención de su doble tutilacióne en Ingenieria Informatica y Adminitración de la Universidad Politécnica de Madrid. Dicho Articulo cuenta con un total de 71 paginas y se entrega como documento anexo al presente estudio.
+Para la actividad de contenido de palabras, se seleccionó el trabajo de grado titulado "Apoyo Tecnológico en la Inversión en Renta Variable", escrito por Román Zamora Carreras como parte de la obtención de su doble titulación en Ingeniería Informática y Administración en la Universidad Politécnica de Madrid. El artículo en cuestión consta de un total de 71 páginas y se adjunta como documento anexo al presente estudio.
 
-Para el desarrollo del presente ejercicio se escoje la herramienta Spark ya que contine integrado funciones de analisis de texto lo cual hara más facil y rapido nuestro analisis en comparación con Hadoop MapReduce donde tendiramos que escribir nuestras fucniones. Para interactuiar con Spark usaremos R, en espeficio la libreria sparkly la cual ofrece el trabajar con Spark, mediante SparkSQL, usando una interfase similar a las de los paquetes usados por el tydyverse herramienta popular de R para el procesamiento de datos, de igual forma sparkly ofrece una forma rapida de isntalar y configurar Spark en computadores windows si se quiere trabajar con clustes locales a si como funcionaliudad para conectarse a clusters remotos de Hadoop YARN, Mesos, Kubernetes, Databricks entre otros.
+El ejercicio debe ser desarrollado utilizando una de las herramientas de procesamiento distribuido, como Hadoop o Spark. A continuación, se enumeran algunas de las características de estas herramientas:
 
-La siguentes son las librerias de R a usar a lo largo del estudio:
+Hadoop:
+
+* Arquitectura: Hadoop se basa en el modelo de programación MapReduce. Divide las tareas en etapas de map y reduce, donde los datos se dividen en bloques y se procesan de forma distribuida en un clúster de nodos.
+* Escalabilidad: Hadoop es altamente escalable y puede manejar grandes conjuntos de datos mediante la distribución del procesamiento en múltiples nodos en un clúster.
+* Tolerancia a fallos: Hadoop está diseñado para ser tolerante a fallos, lo que significa que puede recuperarse automáticamente de errores o fallos en los nodos individuales del clúster.
+* Uso de almacenamiento distribuido: Hadoop utiliza Hadoop Distributed File System (HDFS) para almacenar datos de manera distribuida en los nodos del clúster.
+* Caso de uso recomendado: Hadoop es adecuado para procesar grandes volúmenes de datos sin un tiempo de respuesta en tiempo real crítico. Es útil cuando se requiere un procesamiento en lotes de datos, como análisis de registros o procesamiento de datos históricos.
 
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-library(tidyverse)
-library(sparklyr)
-library(pdftools)
-library(tidytext)
-library(wordcloud)
+Spark:
+
+* Arquitectura: Spark se basa en el modelo de programación de cómputo en memoria, lo que significa que puede realizar operaciones en memoria, lo que resulta en un procesamiento más rápido en comparación con Hadoop.
+* Velocidad: Spark es conocido por su velocidad y capacidad de procesamiento en tiempo real. Puede realizar operaciones de procesamiento y análisis de datos de manera más rápida que Hadoop.
+* Flexibilidad: Spark admite varios lenguajes de programación, como Java, Scala, Python y R, lo que brinda más flexibilidad a los desarrolladores para trabajar en el lenguaje de su elección.
+* Uso de almacenamiento distribuido: Spark también puede utilizar HDFS para almacenar datos distribuidos, al igual que Hadoop, o puede acceder a otros sistemas de almacenamiento, como bases de datos o sistemas de archivos en la nube.
+* Caso de uso recomendado: Spark es ideal cuando se necesita un procesamiento de datos en tiempo real o cerca del tiempo real. Es adecuado para casos de uso como análisis de streaming, procesamiento de eventos en tiempo real y procesamiento interactivo de datos.
+
+Respecto al uso de Hadoop o Spark para llevar acabo conteo de palabras o analisis de texto en general podemos decir que, Si el texto es de gran tamaño o el procesamiento se realiza en lotes de datos sin la necesidad de un tiempo de respuesta en tiempo real, Hadoop puede ser una opción adecuada. La escalabilidad y tolerancia a fallos de Hadoop pueden ser beneficiosas para manejar grandes conjuntos de datos. Por otro lado, si se requiere un procesamiento más rápido y en tiempo real, especialmente si el texto es de tamaño moderado o pequeño, Spark puede ser una opción más adecuada debido a su velocidad y capacidad de procesamiento en memoria.
+
+Para el desarrollo de este ejercicio, se ha elegido la herramienta Spark debido a su flexibilidad. Spark contiene funciones integradas para el análisis de texto, lo cual facilitará y agilizará nuestro análisis en comparación con Hadoop MapReduce, donde tendríamos que escribir nuestras propias funciones. Además, el tamaño del texto en el que realizaremos el conteo no es lo suficientemente grande como para tener en cuenta las consideraciones mencionadas anteriormente.
+
+Para interactuar con Spark, utilizaremos R, en particular la librería sparklyr, que permite trabajar con Spark a través de SparkSQL utilizando una interfaz similar a los paquetes utilizados por el tidyverse, una popular herramienta de R para el procesamiento de datos. Además, sparklyr ofrece una forma rápida de instalar y configurar Spark en computadoras Windows, tanto para trabajar con clústeres locales como para conectarse a clústeres remotos de Hadoop YARN, Mesos, Kubernetes, Databricks, entre otros.
+
+A continuación se presentan las librerías de R que se utilizarán a lo largo del estudio:
+
+
+```{r message=FALSE, warning=FALSE}
+# Cargar paquetes necesarios
+library(tidyverse)    # Proporciona una colección de paquetes para manipulación de datos
+library(sparklyr)     # Proporciona una interfaz para trabajar con Apache Spark
+library(pdftools)     # Permite trabajar con archivos PDF en R
+library(tidytext)     # Proporciona herramientas para el análisis de texto
+library(wordcloud)    # Genera nubes de palabras a partir de un texto
 ```
 
 # Procesamiento texto del articulo.
 
-Debido a que el articulo se encuentra en formato PDF, usaremos la libreria `pdftools` para extraer el texto del mismo y lo almacenaremos en el objeto `texto` 
+Dado que el artículo está en formato PDF, utilizaremos la biblioteca 'pdftools' para extraer su texto. Posteriormente, almacenaremos dicho texto en el objeto llamado 'texto'
 
 ```{r, results="asis"}
+# Extraer el texto de un archivo PDF
 texto <- pdf_text("TFG_ROMAN_ZAMORA_CARRERAS.pdf")
 ```
 
-Revisemos la clase del objeto y su extención.
+Vamos a examinar la clase del objeto y su extensión para obtener más detalles al respecto.
 
 ```{r, results="asis"}
+# Devuelve la clase de la variable "texto", en este caso
 class(texto)
+
+# Devuelve la longitud de la variable "texto"
 length(texto)
 ```
 
-Vemos que se obtubo un vector de clase caracter con una longitud de 71, osea un registro por cada pagina del articulo. 
+Observamos que se ha obtenido un vector de tipo "caracter" con una longitud de 71 elementos, lo cual indica que hay un registro por cada página del artículo.
 
 ## Limpieza de texto
 
-Nuestra primera limpieza sera eliminar de nuestro vector la pagina 5 que contine el resumen del articculo en idioma ingles, ya que nuestro objetivo es contar las palabras en español, de igual forma se quitaran las paginas 63 a 71 que contienen las referencial bibliograficas, esto debido a que la mayoria estan en ingles y fueron consultadas de paginas web. Como nota en R a diferencia de la mayoria de lenguages de programación los indices comienzan en 1 y no en 0.
+Nuestro primer paso en la limpieza de datos será eliminar la página 5, que contiene el resumen del artículo en inglés. Dado que nuestro objetivo es contar las palabras en español, consideramos pertinente excluir esta página. Además, procederemos a eliminar las páginas 63 a 71, que contienen las referencias bibliográficas. Estas páginas se eliminarán debido a que la mayoría de ellas están en inglés y fueron consultadas en páginas web. Cabe mencionar que, en R, a diferencia de la mayoría de los lenguajes de programación, los índices de los elementos comienzan en 1 en lugar de 0.
 
 ```{r, results="asis"}
+# Eliminar páginas específicas del texto extraído del PDF
 texto <- texto[-c(5,63:71)]
+
+# Devuelve la longitud de la variable "texto"
 length(texto)
 ```
 
-Con esto la longitud de nuestro vector pasa a 61 observaciones. Veamos las dos primera para hacernos a una idea del contenido
+Al eliminar las páginas mencionadas, la longitud de nuestro vector se reduce a 61 observaciones. Ahora, examinemos las dos primeras observaciones para tener una idea del contenido.
 
 ```{r, results="asis"}
+# Mostrar las primeras dos páginas del texto extraído del PDF
 cat(head(texto,2))
 ```
 
 ----
 
-Vemos entonces que debemos hacer una limpieza adicional, quitando los saltos de linea asi como numeros, puntuaciones y caracteres especiales para asi dejar solo el texto que debera ser utilizado por Spark. Usaremos la libreria stringr contenida en tidyverse para hacer esta limpieza, usando el sigueinte orden:
+Entonces, parece necesario realizar una limpieza adicional, que consiste en eliminar los saltos de línea, números, puntuaciones y caracteres especiales. El objetivo es conservar únicamente el texto que será utilizado por Spark. Utilizaremos la librería "stringr" que forma parte de "tidyverse" para llevar a cabo esta limpieza, siguiendo el siguiente orden:
 
 * Pasar todo el texto a minuscula
 * Quitar los saltos de linea
@@ -78,67 +110,88 @@ Vemos entonces que debemos hacer una limpieza adicional, quitando los saltos de 
 * Quitar los dobles espacios.
 * Para cada observación (pagína) quitar de existir los espacios al princiío y fin del texto.
 
-Como nota somos concientes que Spark cuenta con funciones similares de limpieza, sin embargo al intentar usarlas se obtuvieron resultados extraños debido a como entiende Spark la codificación del idioma español por lo cual usamos las herramientas de R donde pidumos especifical en el encoding de este idioma.
+Como nota adicional, somos conscientes de que Spark proporciona funciones de limpieza similares. Sin embargo, al intentar utilizar estas funciones, obtuvimos resultados inesperados debido a la forma en que Spark interpreta la codificación del idioma español. Por esta razón, optamos por utilizar las herramientas de R, donde pudimos especificar el encoding específico para este idioma.
 
 ```{r, results="asis"}
+# Preprocesamiento del texto
 texto <- texto |> 
+  # Convertir el texto a minúsculas
   str_to_lower() |> 
+  # Reemplazar saltos de línea por espacios en blanco
   str_replace_all("\n", " ") |> 
+  # Reemplazar caracteres que no sean letras o blancos por espacios en blanco
   str_replace_all("[^a-záéíóúñ\\s]"," ") |> 
+  # Reemplazar múltiples espacios en blanco por uno solo
   str_replace_all("\\s+", " ") |> 
+  # Eliminar espacios en blanco al principio y al final del texto
   str_trim()
 ```
 
-Veamos de nuevo el resultado con el texto limpio
+Veamos nuevamente el resultado con el texto ya limpio.
 
 ```{r, results="asis"}
+# Mostrar las primeras dos páginas del texto extraído del PDF
 cat(head(texto,2))
 ```
-Como se ve ahora el texto se encuentra en el formato indicado para el analisis en Spark, ahora uniremos las 61 paginas en una sola observación para ser procesada.
+
+----
+
+Ahora que el texto se encuentra en el formato adecuado para el análisis en Spark, procederemos a unir las 61 páginas en una sola observación para su procesamiento.
 
 ```{r, results="asis"}
+# Concatenar el texto en una sola cadena
 texto <- paste0(texto, collapse = " ")
+
+# Devuelve la clase de la variable "texto"
 class(texto)
+
+# Devuelve la longitud de la cadena de texto en "texto"
 length(texto)
 ```
 
-# Analisis en Spark
+# Análisis  en Spark
 
-## LLevando los datos a Spark
-Como primer paso pasaremos nuestro texto aun DataFrame para simular la extrucura que usa Spark para el analisis de datos.
+## Llevando los datos a Spark
+Como primer paso, vamos a convertir nuestro texto en un DataFrame para simular la estructura que utiliza Spark para el análisis de datos.
 
 
 ```{r}
+
+# Crear un tibble con la variable "texto"
 texto_df <- tibble(texto = texto)
+
+# Obtener la clase del tibble "texto_df"
 class(texto_df)
 ```
 
-Ahora nos conectaremos a un cluster local donde procesaremos el texto por medio de spark.
+Ahora nos conectaremos a un clúster local donde procesaremos el texto utilizando Spark.
 
 
 ```{r}
+# Establecer la variable de entorno JAVA_HOME
 Sys.setenv(JAVA_HOME="C:/Program Files/Java/jre-1.8")
+
+# Conectar con Spark localmente
 sc <- spark_connect(master = "local")
 ```
 
-En el momento nuestro cluster local se encuentra vacio como podemos ver en la figura 1.
+En este momento, nuestro clúster local se encuentra vacío, como se puede observar en la Figura 1.
 
 <center>
 ![Cluster Vacio](spark/vacio.png)
 </center>
 
-Copiaremos nuetra DataFrame de R a Spark usando la funciónd de sparklyr `copy_to` 
+Copiaremos nuestro DataFrame de R a Spark utilizando la función copy_to de sparklyr.
 
 ```{r}
+# Copiar el tibble al entorno Spark
 texto_df_spk <- copy_to(sc, texto_df,"texto_df_spk", overwrite = TRUE)
-```
 
-
-```{r}
+# Obtener la clase del tibble Spark
 class(texto_df_spk)
 ```
 
-En la figura 2 vemos como nuestra DataFrame texto_df_spk de Spark ya se encuentra dentro del cluster
+En la Figura 2, podemos observar que nuestro DataFrame texto_df_spk de Spark ya se encuentra dentro del clúster.
 
 <center>
 ![Adición de DF texto_df_spk al cluster](spark/df.png)
@@ -146,156 +199,203 @@ En la figura 2 vemos como nuestra DataFrame texto_df_spk de Spark ya se encuentr
 
 ## Tokenización del texto
 
-Ya con nuestro texto en spark procederemos primero a separar cada una de las palabras en una lista mediante la función `ft_tokenizer` (quien usa por detras la fucion de spark tokenizer), luego cada elemento de esta lista lo pasaremos a una fila de un DataFrame usando la función `explode` de spark. El resultado lo guardaremos en el DataFrame `palabras_df_spk` dentro de nuestro cluster de Spark.
+Una vez que tenemos nuestro texto en Spark, procederemos primero a separar cada una de las palabras en una lista utilizando la función ft_tokenizer (que utiliza internamente la función tokenizer de Spark). Luego, convertiremos cada elemento de esta lista en una fila de un DataFrame utilizando la función explode de Spark. El resultado se guardará en el DataFrame palabras_df_spk dentro de nuestro clúster de Spark.
 
 ```{r}
+# Tokenizar el texto en palabras utilizando sparklyr
 palabras_df_spk <- texto_df_spk %>%
   ft_tokenizer(
-    input_col = "texto",
-    output_col = "lista_palabras"
+    # texto a tokenizar
+    input_col = "texto", #texto a tokenizar
+    # Columna de salida que contendrá la lista de palabras tokenizadas
+    output_col = "lista_palabras" 
   ) |> 
+  # Expandir la lista de palabras en filas individuales
   mutate(palabra = explode(lista_palabras)) |> 
+  # Seleccionar solo la columna 'palabra'
   select(palabra) |> 
+  # Realizar el cómputo y generar un nuevo tibble Spark llamado 'palabras_df_spk'
   compute("palabras_df_spk")
 ```
 
-La figura 3 muestra la inclusión del DataFrame palabras_df_spk
+En la Figura 3 se puede apreciar la inclusión del DataFrame palabras_df_spk en nuestro clúster de Spark.
 
 <center>
 ![Adición de DF palabras_df_spk al cluster](spark/df1.png)
 </center>
 
-Miremos las primeras 10 filas de `palabras_df_spk`
+Vamos a revisar las primeras 10 filas del DataFrame palabras_df_spk.
 
 ```{r}
+# Mostrar las primeras 10 filas del tibble 'palabras_df_spk'
 head(palabras_df_spk, 10)
 ```
 ## Conteo de palabras
 
-Nuestro siguente paso es generar de este DF que contiene en filas en orden cada una de las palabras del articulo, una agregación para generar un conteo el número de veces que cada una de estas palabras aparece dentro del articulo. Para esto usaremos la función de Spark `count` sobre la columna `palabra`, el resultado lo llevaremos al clustes en un DataFrame denominado `conteo_palabras`.
+Nuestro siguiente paso consiste en generar una agregación a partir de este DataFrame, el cual contiene en cada fila una palabra del artículo en orden. Queremos contar el número de veces que aparece cada una de estas palabras en el artículo. Para lograr esto, utilizaremos la función count de Spark sobre la columna palabra. El resultado lo almacenaremos en un nuevo DataFrame llamado conteo_palabras, el cual estará disponible en el clúster.
 
 ```{r}
+# Contar la frecuencia de las palabras en 'palabras_df_spk'
 conteo_palabras <- palabras_df_spk |> 
+  # Contar la frecuencia de cada palabra en la columna 'palabra'
   count(palabra) |> 
+  # Desagrupar el tibble después de contar las palabras
   ungroup() |> 
+  # Realizar el cálculo y generar un nuevo tibble Spark llamado 'conteo_palabras'
   compute("conteo_palabras")
 ```
 
 
-La figura 4 muestra la inclusión del DataFrame conteo_palabras
+En la Figura 4 se puede observar la inclusión del DataFrame conteo_palabras en nuestro clúster.
 
 <center>
 ![Adición de DF conteo_palabras al cluster](spark/df2.png)
 </center>
 
-Miremos ahora el top 10 de las palabras más usadas en el articulo
+Vamos a revisar el top 10 de las palabras más utilizadas en el artículo.
 
 ```{r}
+# Mostrar las 10 palabras más frecuentes en 'conteo_palabras'
 conteo_palabras |> 
+  # Ordenar el tibble por la columna 'n' en orden descendente
   arrange(-n) |> 
+  # Mostrar las primeras 10 filas del tibble resultante
   head(10)
 ```
 
-Este top 10 no es muy diciente ya que como era de esperarce cotiene varias de las palabras más usadas dentro del idioma español, por lo cual se hace necesario limpiar este resultado para quitar aquellas palabras que son usadas con frecuencia.
+Es comprensible que el top 10 actual no sea muy revelador, ya que contiene palabras comunes del idioma español. En este caso, es necesario realizar una limpieza adicional para eliminar las palabras que se utilizan con mayor frecuencia y que no aportan información relevante al análisis.
 
-## Removiento Stop Words
+## Remoción de Stop Words
 
-Las "stop words" (palabras vacías o palabras de parada) son palabras comunes y muy frecuentes en un idioma que suelen ser excluidas o filtradas durante el procesamiento de texto o análisis de texto. Estas palabras generalmente se consideran irrelevantes para el análisis de texto debido a su alta frecuencia de aparición y aportan poco valor semántico o informativo al contenido.
+Las "stop words" son palabras comunes y frecuentes en un idioma que se suelen excluir o filtrar durante el procesamiento o análisis de texto. Estas palabras se consideran irrelevantes en el análisis de texto debido a su alta frecuencia de aparición y su bajo valor semántico o informativo.
 
-Entonces para nuestro analisis debemos quitar estas "stop words" para poder hacer sentido del top de palabras de nuestro articulo.
+Por lo tanto, es necesario eliminar estas "stop words" en nuestro análisis para que el top de palabras de nuestro artículo tenga un sentido más claro y relevante.
 
-Para esto usaremos la lista de "stop words" en español del paquete de R `tidytext`, esta lista contiene las 308 palabras más usadas del idioma español segun el Lexicon Snowball generado por el algotimo del mismo nombre por el Dr. Martin Porter, para mas información respecto a este Lexicon visitar  https://snowballstem.org/.
+Para llevar a cabo esta tarea, utilizaremos la lista de "stop words" en español proporcionada por el paquete de R llamado tidytext. Esta lista incluye las 308 palabras más utilizadas en el idioma español, según el Lexicon Snowball, generado por el algoritmo homónimo desarrollado por el Dr. Martin Porter. Si deseas obtener más información acerca de este lexicon, puedes visitar el sitio web oficial en https://snowballstem.org/.
 
-En el siguente codígo guardaremos estas 308 palabras en el objeto stop_words_es
+En el siguiente código, almacenaremos estas 308 palabras en el objeto 
 
 ```{r}
+# Obtener las palabras de parada en español
 stop_words_es <- get_stopwords("es")
 ```
 
-Miremos las primeras 10 palabras de este objeto
+Vamos a revisar las primeras 10 palabras de este objeto.
 
 ```{r}
+# Mostrar las primeras 10 palabras de parada en español
 head(stop_words_es,10)
 ```
-Vemos que varias de las 10 primeras palabras de esta lista coinciden con el top 10 de las palabras más usadas del articulo, por lo cual hace sentido remover estas del articulo para poder hacer un analisis correctamente.
+Observamos que varias de las 10 primeras palabras de esta lista coinciden con el top 10 de las palabras más utilizadas en el artículo. Por lo tanto, tiene sentido eliminar estas palabras del artículo para realizar un análisis adecuado.
 
 
-Nuestro siguiente paso sera llevar esta lista como un DataFrame llamado `stop_words_es_spk` en nuestro cluster.
+Nuestro siguiente paso será convertir esta lista en un DataFrame llamado stop_words_es_spk dentro de nuestro clúster.
 
 ```{r}
+# Copiar el conjunto de palabras de parada en español al entorno Spark
 stop_words_es_spk <- copy_to(sc, stop_words_es,"stop_words_es_spk", overwrite = TRUE)
 
 ```
 
-La figura 5 muestra la inclusión del DataFrame stop_words_es_spk
+En la Figura 5 se muestra la inclusión del DataFrame stop_words_es_spk en nuestro clúster.
 
 <center>
 ![Adición de DF stop_words_es_spk al cluster](spark/df3.png)
 </center>
 
-Nuestro siguente paso sera crear el DF `conteo_palabras_real` en el cual tomaremos al DF `conteo_palabras` y le quitaremos aquellas palabras contenidas en `stop_words_es_spk`, lo anterior lo haremos usando la función de sparklyr anti_join (la cual usa por detras la funcionalidad de spark join de tipo anti)
+Nuestro siguiente paso será crear el DataFrame conteo_palabras_real, en el cual eliminaremos las palabras contenidas en stop_words_es_spk del DataFrame conteo_palabras. Para lograr esto, utilizaremos la función anti_join de sparklyr, la cual utiliza internamente la funcionalidad de join de tipo "anti" en Spark.
 
 
 ```{r}
+# Obtener el conteo de palabras sin las palabras de parada en español
 conteo_palabras_real <- conteo_palabras |> 
+  # Realizar una anti-unión entre 'conteo_palabras' y 'stop_words_es_spk'
+  # por las columnas 'palabra' y 'word'
   anti_join(stop_words_es_spk,
             by = c("palabra" = "word")) |> 
+  # Realizar el cálculo y generar un nuevo tibble Spark llamado 'conteo_palabras_real'
   compute("conteo_palabras_real")
 ```
 
 
-La figura 6 muestra la inclusión del DataFrame stop_words_es_spk
+En la Figura 6 se muestra la inclusión del DataFrame stop_words_es_spk en nuestro clúster.
 
 <center>
 ![Adición de DF stop_words_es_spk al cluster](spark/df4.png)
 </center>
 
-Miremos ahora el top 10 de las palabras más usadas en el árticulo una vez removidas las palabras más comunes del español
+Vamos a revisar el nuevo top 10 de las palabras más utilizadas en el artículo una vez que se han eliminado las palabras más comunes del español.
 
 ```{r}
+# Mostrar las 10 palabras más frecuentes sin las palabras de parada en español
 conteo_palabras_real |> 
+  # Ordenar el tibble por la columna 'n' en orden descendente
   arrange(-n) |> 
+  # Mostrar las primeras 10 filas del tibble resultante
   head(10)
 ```
-Nuestro nuevo top 10 hace más sentido y con solo esas primeras 10 palabras podemos hacernos una idea de la tematica del articulo sin haberlo leido previamente.
+Nuestro nuevo top 10 tiene más sentido y, con solo esas primeras 10 palabras, podemos obtener una idea de la temática del artículo sin haberlo leído previamente.
 
-Como nota vemos dentro del top 10, palabras que contienen el mismo origen como inversión, inversor y activo, activos, esto es debido a que en la limpieza no se llevo acabo un proceso de lematización de las palabras debido a que esto requiere un analisis y metodolgias más profundas y avanzadas que se salen del alcance del presente estidio.
+Como observación, notamos que dentro del top 10 hay palabras que tienen un origen similar, como "inversión", "inversor" y "activo", "activos". Esto se debe a que en la limpieza del texto no se realizó un proceso de lematización de las palabras. La lematización requeriría un análisis más profundo y metodologías avanzadas que están fuera del alcance del presente estudio.
 
 # WordClod
 
-Para finalizar nuestro estudio visualizaremos nuestro resultados mediante un WordCloud que es una representación visual de un conjunto de palabras en la que el tamaño de cada palabra está relacionado con su frecuencia o importancia en un texto o conjunto de datos. 
+Para finalizar nuestro estudio, visualizaremos nuestros resultados mediante un WordCloud. Un WordCloud es una representación visual de un conjunto de palabras, donde el tamaño de cada palabra está relacionado con su frecuencia o importancia en un texto o conjunto de datos.
 
-Primero extraeremos nuestro DF conteo_palabras_real de nuestro cluester de spark y lo llevaremos a R en el DF conteo_palabras_real_R, debio a que mediente esta herramienta realizaremos la visualisación.
+En primer lugar, extraeremos el DataFrame conteo_palabras_real de nuestro clúster de Spark y lo llevaremos a R en el DataFrame conteo_palabras_real_R. Utilizaremos esta herramienta para realizar la visualización mediante el WordCloud.
 
 ```{r}
+# Recopilar el tibble Spark 'conteo_palabras_real' en R
 conteo_palabras_real_R <- collect(conteo_palabras_real)
 ```
 
-Miremos el tamaño de nuestro DF
+Vamos a revisar el tamaño de nuestro DataFrame conteo_palabras_real_R.
 
 ```{r}
+# Obtener las dimensiones del tibble 'conteo_palabras_real_R'
 dim(conteo_palabras_real_R)
 ```
 
-Vemos un total de 3092 Palabras, para nuestra visaulización usaremos solo las primeras 100 con las cuales creemos se puede caputar la escenia del árticulo. Daremos un tono verde para las más usadas siguendo por un azul, naranja y terminando en un gris para las menos usadas de estas primeras 100 palabras más usadas.
+Observamos que el DataFrame conteo_palabras_real_R contiene un total de 3092 palabras. Para nuestra visualización, utilizaremos únicamente las primeras 100 palabras, las cuales creemos que capturan la esencia del artículo. Asignaremos un tono verde a las palabras más utilizadas, seguido de azul, naranja y finalmente gris para representar las palabras menos utilizadas dentro de estas primeras 100 palabras más frecuentes.
 
 ```{r}
-with(conteo_palabras_real_R |> 
+# Generar un wordcloud con las 100 palabras más frecuentes en 'conteo_palabras_real_R'
+with(conteo_palabras_real_R |> # Se utiliza el tibble en R 'conteo_palabras_real_R'
+       # Ordenar el tibble por la columna 'n' en orden descendente
        arrange(-n) |> 
+       # Seleccionar las primeras 100 filas del tibble resultante
        head(100),
      wordcloud(
+       # Columna 'palabra' como el texto a mostrar en el wordcloud
        palabra,
+       # Columna 'n' como la frecuencia de las palabras
        n,
+       # Escala del tamaño de las palabras en el wordcloud
        scale = c(2.5,.5),
+       # Colores utilizados en el wordcloud
        colors = c("#999999", "#E69F00", "#56B4E9", "#5DAE68")
      ))
 ```
 
-De nuestra visualización podemos ver que se hace enfacis en palabras como inversión y empresas, seguirdas por activos analisis e indicadores. Confirmamos nuevamente que este conteo de palabras ayuda a entender la tematica del articulo sin necesidad de leer el mismo. Esto nos demuestra el poder que puede tener el analisis de texto en el mundo de la ciencia de datos ya que con solo un ejercicio basico como el presente se pudo extraer la tematica de un articulo sin necesidad de leer el mismo.
+En nuestra visualización, podemos observar que se hace hincapié en palabras como "inversión" y "empresas", seguidas por "activos", "análisis" e "indicadores". Una vez más, confirmamos que este conteo de palabras nos ayuda a comprender la temática del artículo sin necesidad de leerlo. Esto demuestra el poder que puede tener el análisis de texto en el campo de la ciencia de datos, ya que con un ejercicio básico como el presente, pudimos extraer la temática de un artículo sin necesidad de leerlo.
 
-Como paso final nos desconectaremos de nuestro cluster, para no seguir consuimiendo recursos del mismo.
+Como paso final, nos desconectaremos de nuestro clúster para evitar seguir consumiendo recursos. Es importante realizar esta desconexión para garantizar un uso eficiente de los recursos disponibles.
+
 ```{r}
+# Desconectar de Spark
 spark_disconnect(sc)
 
 ```
 
+
+# Reflexión: La importancia de Hadoop y Spark en la gestión de datos en la Ciencia de Datos.
+
+La gestión y análisis de datos en el ámbito de la Ciencia de Datos se ha vuelto cada vez más crucial en nuestra era digital. Con el crecimiento exponencial de la cantidad de datos generados, surge la necesidad de herramientas eficientes y escalables que permitan procesar y extraer información valiosa de estos vastos conjuntos de datos.
+
+En este contexto, herramientas como Hadoop y Spark desempeñan un papel fundamental al ofrecer capacidades de procesamiento distribuido y manejo de grandes volúmenes de datos. Estas herramientas permiten a los científicos de datos abordar desafíos complejos en términos de escala, velocidad y variedad de datos.
+
+Hadoop, basado en el modelo de programación MapReduce, se destaca por su escalabilidad y capacidad de manejar grandes conjuntos de datos en forma de lotes. Es especialmente útil para análisis retrospectivos y tareas en las que no se requiere una respuesta en tiempo real. Al dividir el procesamiento en etapas de map y reduce distribuidas en un clúster, Hadoop ofrece una solución robusta y tolerante a fallos.
+
+Por otro lado, Spark se basa en el modelo de cómputo en memoria y es conocido por su velocidad y capacidad de procesamiento en tiempo real. Esto hace que Spark sea una opción valiosa cuando se necesita un análisis interactivo y en tiempo real de datos. Además, la flexibilidad de Spark al admitir múltiples lenguajes de programación y su capacidad para acceder a diversos sistemas de almacenamiento distribuido le brindan a los científicos de datos más opciones y flexibilidad en su trabajo.
+
+La elección de utilizar Hadoop o Spark depende de los requisitos y características específicas de cada casi. Si el análisis se realiza en lotes de datos y no se necesita una respuesta en tiempo real, Hadoop ofrece escalabilidad y tolerancia a fallos. Por otro lado, si se requiere un análisis interactivo y en tiempo real, Spark se destaca por su velocidad y capacidad de procesamiento en memoria.
